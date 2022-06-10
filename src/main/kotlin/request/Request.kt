@@ -13,6 +13,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import sslTrustManager
 
 val client = HttpClient(CIO) {
     install(ContentNegotiation){
@@ -24,7 +25,7 @@ val client = HttpClient(CIO) {
     }
     engine {
         https{
-            trustManager = JVMIndex.sslTrustManager
+            trustManager = sslTrustManager
         }
     }
 }
