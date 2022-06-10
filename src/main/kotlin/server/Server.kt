@@ -8,6 +8,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import server.route.clusterRoute
+import server.route.userRoute
 import server.trace.Traceable
 
 object Server {
@@ -15,9 +17,8 @@ object Server {
         println("Starting server at 0.0.0.0:${PORT}")
         embeddedServer(Netty, port = PORT, host = "0.0.0.0") {
             routing {
-                get("/") {
-                    call.respondText("On")
-                }
+                userRoute()
+                clusterRoute()
             }
         }.start(wait = true)
     }

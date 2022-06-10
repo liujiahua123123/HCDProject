@@ -3,7 +3,7 @@ package server.trace
 import utils.createUuid4
 
 /**
- * Traceable is a kind of respond that server generated for some request
+ * Traceable is a kind of respond that server generated for some request, similar to Future
  *
  * This means that the request take time and the server is handling it, front end should
  * check for complete with a schedule task
