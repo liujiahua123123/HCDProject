@@ -18,3 +18,9 @@ inline fun <reified T : Any> T.eachProperty(block: (String, Any?) -> Unit) {
     }
 }
 
+
+private val REGEX_X = Regex("x")
+private val RANDOM_CHAR_CANDIDATES = arrayOf("a", "b", "c", "d", "e", "f", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+
+fun createUuid4(): String = //UUID.randomUUID().toString()
+    "xxxxxxxx-xxxx-4xxx-xxxx-xxxxxxxxxxxx".replace(REGEX_X) { RANDOM_CHAR_CANDIDATES.random() }

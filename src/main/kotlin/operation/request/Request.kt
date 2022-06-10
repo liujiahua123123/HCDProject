@@ -1,4 +1,4 @@
-package request
+package operation.request
 
 import JVMIndex
 import io.ktor.client.*
@@ -33,7 +33,7 @@ val client = HttpClient(CIO) {
 
 
 interface Pipeline{
-    fun beforeRequest(request: Request,  block: HttpRequestBuilder.() -> Unit)
+    fun beforeRequest(request: Request, block: HttpRequestBuilder.() -> Unit)
     fun <T:Any> afterResponse(request: Request, response: Response<T>)
 }
 
