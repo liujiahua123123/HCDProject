@@ -7,6 +7,8 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+const val PORT = 5000
+
 //always trust
 val sslTrustManager = object : X509TrustManager {
     @Throws(CertificateException::class)
@@ -21,6 +23,7 @@ val sslTrustManager = object : X509TrustManager {
         return arrayOf()
     }
 }
+
 
 fun setup(){
     //headers: referer
