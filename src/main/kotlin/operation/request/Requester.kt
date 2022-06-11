@@ -52,7 +52,7 @@ class Requester(){
         FORM_POST(HttpMethod.Post)
     }
 
-    var method: Requester.Method = Method.GET
+    var method: Method = Method.GET
 
     var protocol: URLProtocol = URLProtocol.HTTPS
 
@@ -74,7 +74,7 @@ class Requester(){
     private val pipelines: MutableList<Pipeline> = mutableListOf()
     fun addPipeline(pipeline: Pipeline) = pipelines.add(pipeline)
 
-    suspend inline fun <reified T:Any> send(data: T):Response{
+    suspend inline fun <reified T:Any> send(data: T): Response {
         if(this.method == Method.GET || this.method == Method.FORM_POST){
             return sendImpl(data.asMap())
         }else{
@@ -85,7 +85,7 @@ class Requester(){
     /**
      * this function should not get called directly
      */
-    suspend fun sendImpl(data: Any): Response{
+    suspend fun sendImpl(data: Any): Response {
 
         pipelines.forEach {
             it.beforeRequest(this@Requester, data)
@@ -159,15 +159,6 @@ data class Response(
 }
 
 
-@Serializable
-data class LoginReq(
-    val grant_type: String = "password",
-    val password: String  = "Hello123!",
-    val username: String = "admin",
-    val int: Int = 0
-)
-
-
 suspend fun main(){
     val r = Requester()
     r.domain = "172.16.4.248:8443"
@@ -175,8 +166,8 @@ suspend fun main(){
     r.addPathParameter("/oauth/token")
 
     r.addHeader("Authorization","Basic aGNkLWNsaWVudDpoY2Qtc2VjcmV0")
-    val resp = r.send(LoginReq())
-    println(resp.statusCode)
-    println(resp.body)
+    //val resp = r.send(LoginReq())
+   // println(resp.statusCode)
+   // println(resp.body)
 
 }

@@ -10,11 +10,11 @@ interface Operation<I,O>{
 abstract class HttpOperation<I,O>(
     private val path: String,
     private val method: Requester.Method
-):Operation<I,O>{
+): Operation<I, O> {
 
     var domain: String = ""
 
-    fun getRequester():Requester{
+    fun getRequester(): Requester {
         if(domain.isEmpty()){
             error("HttpOperation need a specific domain")
         }
@@ -25,6 +25,7 @@ abstract class HttpOperation<I,O>(
         }
     }
 }
+
 @kotlinx.serialization.Serializable
 data class LoginReq(
     val grant_type: String = "password",
@@ -37,7 +38,7 @@ data class LoginReq(
 data class LoginResp(val access_token: String)
 
 
-class LoginOperation:HttpOperation<LoginReq,LoginResp>(
+class LoginOperation: HttpOperation<LoginReq, LoginResp>(
     method = Requester.Method.FORM_POST,
     path = "/oauth/token"
 ){
