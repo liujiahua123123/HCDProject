@@ -37,7 +37,7 @@ val client = HttpClient(CIO) {
 
 
 interface Pipeline{
-    fun beforeRequest(request: Request)
+    fun beforeRequest(request: Request, data: Any)
 
     fun <T:Any> afterResponse(request: Request, response: Response)
 }
@@ -86,9 +86,11 @@ class Request(){
      * this function should not get called directly
      */
     suspend fun sendImpl(data: Any): Response{
+
         pipelines.forEach {
-            it.beforeRequest(this)
+            it.beforeRequest(this@Request, data)
         }
+
 
         val resp = client.request{
 
@@ -109,18 +111,16 @@ class Request(){
 
             when (this@Request.method) {
                 Method.FORM_POST -> {
-                    val content:Parameters = Parameters.build {
+                    val content: Parameters = Parameters.build {
                         (data as Map<*, *>).forEach {
                             append(it.key as String, it.value as String)
                         }
                     }
                     val form = FormDataContent(content)
-                    println(form.formData)
                     setBody(form)
                 }
 
                 Method.GET -> {
-                    contentType(ContentType.Application.Json)
                     (data as Map<*, *>).forEach {
                         parameter(it.key as String,it.value)
                     }
@@ -132,6 +132,8 @@ class Request(){
                     setBody(data)
                 }
             }
+
+
         }
 
         return Response(
@@ -156,6 +158,8 @@ data class LoginReq(
     val username: String = "admin",
     val int: Int = 0
 )
+
+
 suspend fun main(){
     val r = Request()
     r.domain = "172.16.4.248:8443"

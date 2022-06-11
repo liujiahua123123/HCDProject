@@ -11,7 +11,6 @@ import utils.createUuid4
 interface Traceable<T:Any> {
     val id: String
 
-
     enum class State{
         SCHEDULING,
         COMPUTED,
