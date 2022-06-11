@@ -1,6 +1,5 @@
 package operation.request
 
-import JVMIndex
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -12,9 +11,10 @@ import io.ktor.client.statement.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import server.ServerJson
 import sslTrustManager
 import utils.asMap
 
@@ -37,12 +37,12 @@ val client = HttpClient(CIO) {
 
 
 interface Pipeline{
-    fun beforeRequest(request: Request, data: Any)
+    fun beforeRequest(request: Requester, data: Any)
 
-    fun <T:Any> afterResponse(request: Request, response: Response)
+    fun <T:Any> afterResponse(request: Requester, response: Response)
 }
 
-class Request(){
+class Requester(){
     enum class Method(val ktorMethod: HttpMethod){
         GET(HttpMethod.Get),
         POST(HttpMethod.Post),
@@ -52,7 +52,7 @@ class Request(){
         FORM_POST(HttpMethod.Post)
     }
 
-    var method: Request.Method = Method.GET
+    var method: Requester.Method = Method.GET
 
     var protocol: URLProtocol = URLProtocol.HTTPS
 
@@ -88,28 +88,28 @@ class Request(){
     suspend fun sendImpl(data: Any): Response{
 
         pipelines.forEach {
-            it.beforeRequest(this@Request, data)
+            it.beforeRequest(this@Requester, data)
         }
 
 
         val resp = client.request{
 
-            this.method = this@Request.method.ktorMethod
+            this.method = this@Requester.method.ktorMethod
 
             url {
-                it.host = this@Request.domain.substringBeforeLast(":")
-                if(this@Request.domain.contains(":")) {
-                    it.port = this@Request.domain.substringAfterLast(":").toInt()
+                it.host = this@Requester.domain.substringBeforeLast(":")
+                if(this@Requester.domain.contains(":")) {
+                    it.port = this@Requester.domain.substringAfterLast(":").toInt()
                 }
-                it.pathSegments = this@Request.path
-                it.protocol = this@Request.protocol
+                it.pathSegments = this@Requester.path
+                it.protocol = this@Requester.protocol
             }
 
-            this@Request.headers.forEach {
+            this@Requester.headers.forEach {
                 this.headers.append(it.first,it.second)
             }
 
-            when (this@Request.method) {
+            when (this@Requester.method) {
                 Method.FORM_POST -> {
                     val content: Parameters = Parameters.build {
                         (data as Map<*, *>).forEach {
@@ -148,7 +148,15 @@ class Request(){
 data class Response(
     val statusCode: Int,
     val body: String
-)
+){
+    inline fun <reified T:Any> parse():T{
+        try {
+            return ServerJson.decodeFromString(this.body)
+        }catch (e:Exception){
+            error("Failed to deserialize response as ${T::class.simpleName}, raw data = $body")
+        }
+    }
+}
 
 
 @Serializable
@@ -161,13 +169,14 @@ data class LoginReq(
 
 
 suspend fun main(){
-    val r = Request()
+    val r = Requester()
     r.domain = "172.16.4.248:8443"
-    r.method = Request.Method.FORM_POST
+    r.method = Requester.Method.FORM_POST
     r.addPathParameter("/oauth/token")
 
     r.addHeader("Authorization","Basic aGNkLWNsaWVudDpoY2Qtc2VjcmV0")
     val resp = r.send(LoginReq())
     println(resp.statusCode)
     println(resp.body)
+
 }

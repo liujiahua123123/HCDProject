@@ -1,39 +1,56 @@
+package operation
 
+import operation.request.Requester
 
-
-abstract class Operation<I,O>(){
-
-    open infix fun <N> then(another: Operation<O, N>): CombinedOperation<I,N>{
-        return CombinedOperation.ofSingle(this) then another
-    }
-
-    abstract operator fun invoke(input: I):O
+interface Operation<I,O>{
+    suspend operator fun invoke(input: I): O
 }
 
 
-class CombinedOperation<I,O>:Operation<I,O>(){
-    private val list: MutableList<Operation<*,*>> = mutableListOf()
-    val size: Int
-        get() = list.size
+abstract class HttpOperation<I,O>(
+    private val path: String,
+    private val method: Requester.Method
+):Operation<I,O>{
 
+    var domain: String = ""
 
-    companion object{
-        fun <I,O> ofSingle(operation: Operation<I,O>): CombinedOperation<I,O>{
-            return CombinedOperation<I, O>().also {
-                it.list.add(operation)
-            }
+    fun getRequester():Requester{
+        if(domain.isEmpty()){
+            error("HttpOperation need a specific domain")
+        }
+        return Requester().also {
+            it.addPathParameter(path)
+            it.domain = domain
+            it.method = method
         }
     }
+}
+@kotlinx.serialization.Serializable
+data class LoginReq(
+    val grant_type: String = "password",
+    val password: String  = "Hello123!",
+    val username: String = "admin",
+    val int: Int = 0
+)
 
-    override infix fun <N> then(another: Operation<O, N>): CombinedOperation<I, N> {
-        return CombinedOperation<I, N>().also {
-            it.list.addAll(list)
-            it.list.add(another)
-        }
+@kotlinx.serialization.Serializable
+data class LoginResp(val access_token: String)
+
+
+class LoginOperation:HttpOperation<LoginReq,LoginResp>(
+    method = Requester.Method.FORM_POST,
+    path = "/oauth/token"
+){
+    override suspend fun invoke(input: LoginReq): LoginResp {
+        return getRequester().apply {
+            addHeader("Authorization","Basic aGNkLWNsaWVudDpoY2Qtc2VjcmV0")
+        }.send(input).parse()
     }
+}
 
-    override fun invoke(input: I): O {
-        TODO("Not yet implemented")
-    }
+suspend fun main(){
+    val op =  LoginOperation()
 
+    op.domain = "172.16.4.248:8443"
+    println(op(LoginReq()))
 }
