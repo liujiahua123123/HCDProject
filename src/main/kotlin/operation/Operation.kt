@@ -5,6 +5,7 @@ import operation.login.LoginReq
 import request.pipeline.AsyncLogger
 import request.pipeline.StatusChecker
 import operation.request.Requester
+import request.pipeline.KeyExchangePipeline
 import kotlin.math.log
 
 interface Operation<I, O> {
@@ -13,15 +14,15 @@ interface Operation<I, O> {
 
 
 abstract class HttpOperation<I, O>(
-    private val path: String,
-    private val method: Requester.Method
+    val path: String,
+    val method: Requester.Method
 ) : Operation<I, O> {
 
     var domain: String = ""
 
     var loggerName = this.javaClass.simpleName.removeSuffix("Operation")
 
-    fun getRequester(): Requester {
+    open fun getRequester(): Requester {
         if (domain.isEmpty()) {
             error("HttpOperation need a specific domain")
         }
@@ -31,6 +32,16 @@ abstract class HttpOperation<I, O>(
             it.method = method
             it.addPipeline(StatusChecker)
             it.addPipeline(AsyncLogger(loggerName))
+        }
+    }
+}
+
+abstract class AuthedHttpOperation<I, O>(
+   path: String, method: Requester.Method
+): HttpOperation<I, O>(path,method){
+    override fun getRequester(): Requester {
+        return super.getRequester().apply {
+            addPipeline(KeyExchangePipeline)
         }
     }
 }

@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import server.route.clusterRoute
+import server.route.hostRoute
 import server.route.userRoute
 import server.trace.Traceable
 
@@ -19,6 +20,7 @@ object Server {
             routing {
                 userRoute()
                 clusterRoute()
+                hostRoute()
             }
         }.start(wait = true)
     }

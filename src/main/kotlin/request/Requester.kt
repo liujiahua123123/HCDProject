@@ -130,7 +130,9 @@ class Requester(){
                         try {
                             val content: Parameters = Parameters.build {
                                 (data as Map<*, *>).forEach {
-                                    append(it.key as String, it.value as String)
+                                    if(it.value != null) {
+                                        append(it.key as String, it.value.toString())
+                                    }
                                 }
                             }
                             val form = FormDataContent(content)
@@ -145,7 +147,9 @@ class Requester(){
                     Method.GET -> {
                         try {
                             (data as Map<*, *>).forEach {
-                                parameter(it.key as String, it.value)
+                                if(it.value != null) {
+                                    parameter(it.key as String, it.value)
+                                }
                             }
                         } catch (e: Exception) {
                             throw RequestBodyException("Failed to build GET request with given data $data").apply {

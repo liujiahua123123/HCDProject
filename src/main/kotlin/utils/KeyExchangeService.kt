@@ -16,7 +16,7 @@ object KeyExchangeService{
     private val keyManagement = ConcurrentHashMap<String, AccessKey>()
     private val credentialManagement = ConcurrentHashMap<String, Pair<String, String>>()
 
-    fun register(host: String, username: String, password: String, resp: LoginResp?){
+    fun register(host: String, username: String = "admin", password: String = "Hello123!", resp: LoginResp? = null){
         credentialManagement[host] = Pair(username, password)
         if(resp != null){
             keyManagement[host] = AccessKey(resp.access_token,resp.expire * 1000 + currentTimeMillis())
@@ -24,7 +24,7 @@ object KeyExchangeService{
     }
 
     suspend fun get(host: String):AccessKey{
-        if(!credentialManagement.contains(host)){
+        if(!credentialManagement.containsKey(host)){
             error("$host didn't register for KeyExchangeService")
         }
         val key = keyManagement[host] ?: return renewKey(host)
