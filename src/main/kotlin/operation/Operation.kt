@@ -1,23 +1,28 @@
 package operation
 
-import operation.pipeline.AsyncLogger
-import operation.pipeline.StatusChecker
+import operation.login.LoginOperation
+import operation.login.LoginReq
+import request.pipeline.AsyncLogger
+import request.pipeline.StatusChecker
 import operation.request.Requester
+import kotlin.math.log
 
-interface Operation<I,O>{
+interface Operation<I, O> {
     suspend operator fun invoke(input: I): O
 }
 
 
-abstract class HttpOperation<I,O>(
+abstract class HttpOperation<I, O>(
     private val path: String,
     private val method: Requester.Method
-): Operation<I, O> {
+) : Operation<I, O> {
 
     var domain: String = ""
 
+    var loggerName = this.javaClass.simpleName.removeSuffix("Operation")
+
     fun getRequester(): Requester {
-        if(domain.isEmpty()){
+        if (domain.isEmpty()) {
             error("HttpOperation need a specific domain")
         }
         return Requester().also {
@@ -25,39 +30,20 @@ abstract class HttpOperation<I,O>(
             it.domain = domain
             it.method = method
             it.addPipeline(StatusChecker)
-            it.addPipeline(AsyncLogger())
+            it.addPipeline(AsyncLogger(loggerName))
         }
     }
 }
 
-@kotlinx.serialization.Serializable
-data class LoginReq(
-    val grant_type: String = "password",
-    val password: String  = "Hello123!",
-    val username: String = "admin",
-    val int: Int = 0
-)
-
-@kotlinx.serialization.Serializable
-data class LoginResp(val access_token: String)
-
-
-class LoginOperation: HttpOperation<LoginReq, LoginResp>(
-    method = Requester.Method.FORM_POST,
-    path = "/oauth/token"
-){
-    override suspend fun invoke(input: LoginReq): LoginResp {
-        return getRequester().apply {
-            addHeader("Authorization","Basic aGNkLWNsaWVudDpoY2Qtc2VjcmV0")
-        }.send(input).parse()
-    }
-}
-
-suspend fun main(){
-    val op =  LoginOperation()
+suspend fun main() {
+    val op = LoginOperation()
 
     op.domain = "172.16.4.248:8443"
-    println(op(LoginReq(
-        username = "a"
-    )))
+    println(
+        op(
+            LoginReq(
+                username = "a"
+            )
+        )
+    )
 }

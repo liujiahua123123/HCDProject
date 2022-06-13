@@ -19,6 +19,7 @@ import sslTrustManager
 import utils.RequestBodyException
 import utils.ResponseBodyException
 import utils.asMap
+import java.util.PriorityQueue
 
 val client = HttpClient(CIO) {
     install(ContentNegotiation){
@@ -39,6 +40,7 @@ val client = HttpClient(CIO) {
 
 
 interface Pipeline{
+    val priority: Int
     suspend fun beforeRequest(request: Requester, data: Any)
 
     suspend fun afterResponse(request: Requester, response: Response)
@@ -77,7 +79,7 @@ class Requester(){
         this.path.addAll(path.split("/").filter { it.isNotEmpty() })
     }
 
-    private val pipelines: MutableList<Pipeline> = mutableListOf()
+    private val pipelines: PriorityQueue<Pipeline> = PriorityQueue { o1, o2 -> o1.priority - o2.priority }
     fun addPipeline(pipeline: Pipeline) = pipelines.add(pipeline)
 
     suspend inline fun <reified T:Any> send(data: T): Response {

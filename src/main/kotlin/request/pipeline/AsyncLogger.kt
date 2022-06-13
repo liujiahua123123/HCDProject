@@ -1,4 +1,4 @@
-package operation.pipeline
+package request.pipeline
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.runInterruptible
@@ -22,9 +22,13 @@ import kotlin.math.log
  * It also provides the ability to warn Throwable and log Throwable
  * It guarantees cache will be flush to the print stream before runtime shutdown
  */
-class AsyncLogger(val output: PrintStream = System.out, private val colorCodeType: LogColorOutputType = LogColorOutputType.LinuxCode) : Pipeline {
+class AsyncLogger(val loggerName: String, val output: PrintStream = System.out, private val colorCodeType: LogColorOutputType = LogColorOutputType.LinuxCode
+) : Pipeline {
     /** Thread safe */
     private val logs = StringBuffer()
+
+    override val priority: Int
+    get() = Int.MAX_VALUE
 
     companion object {
         val printLock = Mutex()
@@ -36,7 +40,7 @@ class AsyncLogger(val output: PrintStream = System.out, private val colorCodeTyp
              * save log from force runtime shut-down
              */
             Runtime.getRuntime().addShutdownHook(thread(start = false) {
-                this.inProgressLoggers.forEach {
+                inProgressLoggers.forEach {
                     it.log(LogColor.RED, "This request is terminated because of runtime shutdown")
                     it.output.println(" ")
                     it.output.println(it.logs.toString())
@@ -66,6 +70,8 @@ class AsyncLogger(val output: PrintStream = System.out, private val colorCodeTyp
         logs.append(buildString{
             append(color.toString(this@AsyncLogger.colorCodeType))
             append("[")
+            append(loggerName)
+            append(" ")
             append(sdf.format(currentTimeMillis()))
             append("] ")
             append(message)

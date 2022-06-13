@@ -1,4 +1,4 @@
-package operation.pipeline
+package request.pipeline
 
 import operation.request.Pipeline
 import operation.request.Requester
@@ -7,6 +7,9 @@ import utils.HttpStatusException
 
 
 object StatusChecker: Pipeline {
+    override val priority: Int
+        get() = 100
+
     override suspend fun beforeRequest(request: Requester, data: Any) {
 
     }
