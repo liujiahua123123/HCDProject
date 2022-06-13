@@ -41,10 +41,8 @@ class AsyncLogger(val loggerName: String, val output: PrintStream = System.out, 
              */
             Runtime.getRuntime().addShutdownHook(thread(start = false) {
                 inProgressLoggers.forEach {
-                    it.log(LogColor.RED, "This request is terminated because of runtime shutdown")
-                    it.output.println(" ")
-                    it.output.println(it.logs.toString())
-                    it.output.println(" ")
+                    it.log(LogColor.RED, "Terminated because of runtime shutdown")
+                    it.output.print(it.logs.toString())
                 }
             })
         }
@@ -56,9 +54,7 @@ class AsyncLogger(val loggerName: String, val output: PrintStream = System.out, 
 
     private suspend fun flush(){
         printLock.withLock {
-            output.println(" ")
-            output.println(logs.toString())
-            output.println(" ")
+            output.print(logs.toString())
         }
         logs.delete(0,logs.length)
         inProgressLoggers.remove(this)
@@ -99,7 +95,7 @@ class AsyncLogger(val loggerName: String, val output: PrintStream = System.out, 
 
 
     override suspend fun onThrowable(request: Requester, throwable: Throwable) {
-        log(LogColor.RED, "Exception ${throwable.javaClass.simpleName} happened, saving logs and stacktrace")
+        log(LogColor.RED, "Encountered ${throwable.javaClass.simpleName}, saving logs and stacktrace")
         flush()
     }
 }
