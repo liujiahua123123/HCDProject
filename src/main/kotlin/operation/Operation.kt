@@ -1,5 +1,7 @@
 package operation
 
+import operation.pipeline.AsyncLogger
+import operation.pipeline.StatusChecker
 import operation.request.Requester
 
 interface Operation<I,O>{
@@ -22,6 +24,8 @@ abstract class HttpOperation<I,O>(
             it.addPathParameter(path)
             it.domain = domain
             it.method = method
+            it.addPipeline(StatusChecker)
+            it.addPipeline(AsyncLogger())
         }
     }
 }
@@ -53,5 +57,7 @@ suspend fun main(){
     val op =  LoginOperation()
 
     op.domain = "172.16.4.248:8443"
-    println(op(LoginReq()))
+    println(op(LoginReq(
+        username = "a"
+    )))
 }

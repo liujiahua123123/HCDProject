@@ -1,5 +1,7 @@
 package operation.pipeline
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.html.currentTimeMillis
@@ -8,13 +10,19 @@ import operation.request.Requester
 import operation.request.Response
 import utils.LogColor
 import utils.LogColorOutputType
+import java.awt.Color
 import java.io.PrintStream
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.math.log
 
-class AsyncLogger(val output: PrintStream = System.out, val colorCodeType: LogColorOutputType) : Pipeline {
+/**
+ * Async Logger provide the ability to log every request continually in the output stream (impl by cache)
+ * It also provides the ability to warn Throwable and log Throwable
+ * It guarantees cache will be flush to the print stream before runtime shutdown
+ */
+class AsyncLogger(val output: PrintStream = System.out, private val colorCodeType: LogColorOutputType = LogColorOutputType.LinuxCode) : Pipeline {
     /** Thread safe */
     private val logs = StringBuffer()
 
@@ -24,11 +32,15 @@ class AsyncLogger(val output: PrintStream = System.out, val colorCodeType: LogCo
         private val inProgressLoggers = Collections.synchronizedList(mutableListOf<AsyncLogger>())
 
         init {
+            /**
+             * save log from force runtime shut-down
+             */
             Runtime.getRuntime().addShutdownHook(thread(start = false) {
-                inProgressLoggers.forEach {
-                    it.output.println()
+                this.inProgressLoggers.forEach {
+                    it.log(LogColor.RED, "This request is terminated because of runtime shutdown")
+                    it.output.println(" ")
                     it.output.println(it.logs.toString())
-                    it.output.println()
+                    it.output.println(" ")
                 }
             })
         }
@@ -38,23 +50,33 @@ class AsyncLogger(val output: PrintStream = System.out, val colorCodeType: LogCo
         inProgressLoggers.add(this)
     }
 
-    fun log(color: LogColor, message: Any){
+    private suspend fun flush(){
+        printLock.withLock {
+            output.println(" ")
+            output.println(logs.toString())
+            output.println(" ")
+        }
+        logs.delete(0,logs.length)
+        inProgressLoggers.remove(this)
+    }
+
+    private fun log(color: LogColor, message: Any){
         val strDateFormat = "MM-dd HH:mm:ss"
         val sdf = SimpleDateFormat(strDateFormat)
-        output.println(buildString{
+        logs.append(buildString{
             append(color.toString(this@AsyncLogger.colorCodeType))
-            append(" ")
+            append("[")
             append(sdf.format(currentTimeMillis()))
-            append(" :")
+            append("] ")
             append(message)
             append(LogColor.RESET.toString(colorCodeType))
+            append("\n")
         })
     }
 
     override suspend fun beforeRequest(request: Requester, data: Any) {
-        log(LogColor.TEAL,request.method.toString() + " " + request.buildURL().buildString())
+        log(LogColor.TEAL, "${request.method} ${request.buildURL().buildString()}")
         log(LogColor.TEAL,request.data)
-
     }
 
     override suspend fun afterResponse(request: Requester, response: Response) {
@@ -64,16 +86,14 @@ class AsyncLogger(val output: PrintStream = System.out, val colorCodeType: LogCo
             LogColor.RED
         }
 
-        (response.statusCode)
-        logs.append(response.body)
-
-        printLock.withLock {
-            output.println(" ")
-            output.println(logs.toString())
-            output.println(" ")
-        }
-
-        inProgressLoggers.remove(this)
+        log(color,response.statusCode)
+        log(color,response.body)
+        flush()
     }
 
+
+    override suspend fun onThrowable(request: Requester, throwable: Throwable) {
+        log(LogColor.RED, "Exception ${throwable.javaClass.simpleName} happened, saving logs and stacktrace")
+        flush()
+    }
 }

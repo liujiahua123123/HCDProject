@@ -42,6 +42,8 @@ interface Pipeline{
     suspend fun beforeRequest(request: Requester, data: Any)
 
     suspend fun afterResponse(request: Requester, response: Response)
+
+    suspend fun onThrowable(request: Requester, throwable: Throwable){}
 }
 
 class Requester(){
@@ -108,66 +110,71 @@ class Requester(){
             it.beforeRequest(this@Requester, data)
         }
 
+        try {
+            val resp = client.request {
 
-        val resp = client.request{
+                this.method = this@Requester.method.ktorMethod
 
-            this.method = this@Requester.method.ktorMethod
+                buildURL(this.url)
 
-            buildURL(this.url)
+                this@Requester.headers.forEach {
+                    this.headers.append(it.first, it.second)
+                }
 
-            this@Requester.headers.forEach {
-                this.headers.append(it.first,it.second)
-            }
+                /* Type Erase Warning */
 
-            /* Type Erase Warning */
-
-            when (this@Requester.method) {
-                Method.FORM_POST -> {
-                    try {
-                        val content: Parameters = Parameters.build {
-                            (data as Map<*, *>).forEach {
-                                append(it.key as String, it.value as String)
+                when (this@Requester.method) {
+                    Method.FORM_POST -> {
+                        try {
+                            val content: Parameters = Parameters.build {
+                                (data as Map<*, *>).forEach {
+                                    append(it.key as String, it.value as String)
+                                }
+                            }
+                            val form = FormDataContent(content)
+                            setBody(form)
+                        } catch (e: Exception) {
+                            throw RequestBodyException("Failed to build FORM POST request with given data $data").apply {
+                                addSuppressed(e)
                             }
                         }
-                        val form = FormDataContent(content)
-                        setBody(form)
-                    }catch (e: Exception){
-                        throw RequestBodyException("Failed to build FORM POST request with given data $data").apply {
-                            addSuppressed(e)
+                    }
+
+                    Method.GET -> {
+                        try {
+                            (data as Map<*, *>).forEach {
+                                parameter(it.key as String, it.value)
+                            }
+                        } catch (e: Exception) {
+                            throw RequestBodyException("Failed to build GET request with given data $data").apply {
+                                addSuppressed(e)
+                            }
                         }
                     }
-                }
 
-                Method.GET -> {
-                    try {
-                        (data as Map<*, *>).forEach {
-                            parameter(it.key as String, it.value)
-                        }
-                    }catch (e: Exception){
-                        throw RequestBodyException("Failed to build GET request with given data $data").apply {
-                            addSuppressed(e)
-                        }
+                    else -> {
+                        contentType(ContentType.Application.Json)
+                        //content negotiation
+                        setBody(data)
                     }
-                }
-
-                else -> {
-                    contentType(ContentType.Application.Json)
-                    //content negotiation
-                    setBody(data)
                 }
             }
-        }
 
-        return Response(
-            resp.status.value,
-            resp.bodyAsText()
-        ).apply {
+            return Response(
+                resp.status.value,
+                resp.bodyAsText()
+            ).apply {
+                pipelines.forEach {
+                    it.afterResponse(this@Requester, this)
+                }
+            }
+        }catch (e: Throwable){
             pipelines.forEach {
-                it.afterResponse(this@Requester,this)
+                it.onThrowable(this@Requester, e)
             }
+            throw e
         }
     }
-
 }
 
 

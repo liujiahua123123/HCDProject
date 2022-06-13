@@ -37,11 +37,11 @@ enum class LogColorOutputType(){
     NOTHING
 }
 enum class LogColor(private val linuxColorCode: String, private val htmlColorCode: String){
-    RESET("\\033[0m", ""),
-    RED("\\033[31m","red"),
-    GREEN("\\033[34m","green"),
-    YELLOW("\\033[33m","yellow"),
-    TEAL("\\033[36m","teal")
+    RESET("\u001B[0m", ""),
+    RED("\u001B[31m","red"),
+    GREEN("\u001B[32m","green"),
+    YELLOW("\u001B[33m","yellow"),
+    TEAL("\u001B[36m","teal")
     ;
 
     fun toString(type: LogColorOutputType): String {
