@@ -16,6 +16,8 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import server.ServerJson
 import sslTrustManager
+import utils.RequestBodyException
+import utils.ResponseBodyException
 import utils.asMap
 
 val client = HttpClient(CIO) {
@@ -37,9 +39,9 @@ val client = HttpClient(CIO) {
 
 
 interface Pipeline{
-    fun beforeRequest(request: Requester, data: Any)
+    suspend fun beforeRequest(request: Requester, data: Any)
 
-    fun <T:Any> afterResponse(request: Requester, response: Response)
+    suspend fun afterResponse(request: Requester, response: Response)
 }
 
 class Requester(){
@@ -64,6 +66,8 @@ class Requester(){
         path.add(parameter)
     }
 
+    lateinit var data: Any
+
     private val headers: MutableList<Pair<String,String>> = mutableListOf()
     fun addHeader(key:String, value:String) = headers.add(Pair(key,value))
 
@@ -82,10 +86,23 @@ class Requester(){
         }
     }
 
+    fun buildURL(builder:URLBuilder = URLBuilder()):URLBuilder{
+        return builder.also{
+            it.host = this@Requester.domain.substringBeforeLast(":")
+            if(this@Requester.domain.contains(":")) {
+                it.port = this@Requester.domain.substringAfterLast(":").toInt()
+            }
+            it.pathSegments = this@Requester.path
+            it.protocol = this@Requester.protocol
+        }
+    }
+
     /**
      * this function should not get called directly
      */
     suspend fun sendImpl(data: Any): Response {
+
+        this.data = data
 
         pipelines.forEach {
             it.beforeRequest(this@Requester, data)
@@ -96,50 +113,59 @@ class Requester(){
 
             this.method = this@Requester.method.ktorMethod
 
-            url {
-                it.host = this@Requester.domain.substringBeforeLast(":")
-                if(this@Requester.domain.contains(":")) {
-                    it.port = this@Requester.domain.substringAfterLast(":").toInt()
-                }
-                it.pathSegments = this@Requester.path
-                it.protocol = this@Requester.protocol
-            }
+            buildURL(this.url)
 
             this@Requester.headers.forEach {
                 this.headers.append(it.first,it.second)
             }
 
+            /* Type Erase Warning */
+
             when (this@Requester.method) {
                 Method.FORM_POST -> {
-                    val content: Parameters = Parameters.build {
-                        (data as Map<*, *>).forEach {
-                            append(it.key as String, it.value as String)
+                    try {
+                        val content: Parameters = Parameters.build {
+                            (data as Map<*, *>).forEach {
+                                append(it.key as String, it.value as String)
+                            }
+                        }
+                        val form = FormDataContent(content)
+                        setBody(form)
+                    }catch (e: Exception){
+                        throw RequestBodyException("Failed to build FORM POST request with given data $data").apply {
+                            addSuppressed(e)
                         }
                     }
-                    val form = FormDataContent(content)
-                    setBody(form)
                 }
 
                 Method.GET -> {
-                    (data as Map<*, *>).forEach {
-                        parameter(it.key as String,it.value)
+                    try {
+                        (data as Map<*, *>).forEach {
+                            parameter(it.key as String, it.value)
+                        }
+                    }catch (e: Exception){
+                        throw RequestBodyException("Failed to build GET request with given data $data").apply {
+                            addSuppressed(e)
+                        }
                     }
                 }
 
                 else -> {
-                    //auto content negotiation
                     contentType(ContentType.Application.Json)
+                    //content negotiation
                     setBody(data)
                 }
             }
-
-
         }
 
         return Response(
             resp.status.value,
             resp.bodyAsText()
-        )
+        ).apply {
+            pipelines.forEach {
+                it.afterResponse(this@Requester,this)
+            }
+        }
     }
 
 }
@@ -153,21 +179,10 @@ data class Response(
         try {
             return ServerJson.decodeFromString(this.body)
         }catch (e:Exception){
-            error("Failed to deserialize response as ${T::class.simpleName}, raw data = $body")
+            throw ResponseBodyException("Failed to deserialize response as ${T::class.simpleName}, raw data = $body").apply {
+                addSuppressed(e)
+            }
         }
     }
 }
 
-
-suspend fun main(){
-    val r = Requester()
-    r.domain = "172.16.4.248:8443"
-    r.method = Requester.Method.FORM_POST
-    r.addPathParameter("/oauth/token")
-
-    r.addHeader("Authorization","Basic aGNkLWNsaWVudDpoY2Qtc2VjcmV0")
-    //val resp = r.send(LoginReq())
-   // println(resp.statusCode)
-   // println(resp.body)
-
-}

@@ -24,3 +24,35 @@ private val RANDOM_CHAR_CANDIDATES = arrayOf("a", "b", "c", "d", "e", "f", "0", 
 
 fun createUuid4(): String = //UUID.randomUUID().toString()
     "xxxxxxxx-xxxx-4xxx-xxxx-xxxxxxxxxxxx".replace(REGEX_X) { RANDOM_CHAR_CANDIDATES.random() }
+
+
+class RequestBodyException(override val message: String):Exception(message)
+class ResponseBodyException(override val message: String):Exception(message)
+class HttpStatusException(override val message: String):Exception(message)
+
+
+enum class LogColorOutputType(){
+    LinuxCode,
+    HTML,
+    NOTHING
+}
+enum class LogColor(private val linuxColorCode: String, private val htmlColorCode: String){
+    RESET("\\033[0m", ""),
+    RED("\\033[31m","red"),
+    GREEN("\\033[34m","green"),
+    YELLOW("\\033[33m","yellow"),
+    TEAL("\\033[36m","teal")
+    ;
+
+    fun toString(type: LogColorOutputType): String {
+        return when(type){
+            LogColorOutputType.LinuxCode -> this.linuxColorCode
+            LogColorOutputType.HTML -> this.htmlColorCode
+            LogColorOutputType.NOTHING -> ""
+        }
+    }
+
+    override fun toString(): String {
+        return this.toString(LogColorOutputType.LinuxCode)
+    }
+}
