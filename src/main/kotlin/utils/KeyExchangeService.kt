@@ -3,6 +3,7 @@ package utils
 import kotlinx.html.currentTimeMillis
 import operation.login.LoginOperation
 import operation.login.LoginReq
+import operation.login.LoginResp
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -15,8 +16,11 @@ object KeyExchangeService{
     private val keyManagement = ConcurrentHashMap<String, AccessKey>()
     private val credentialManagement = ConcurrentHashMap<String, Pair<String, String>>()
 
-    fun register(host: String, username: String, password: String){
+    fun register(host: String, username: String, password: String, resp: LoginResp?){
         credentialManagement[host] = Pair(username, password)
+        if(resp != null){
+            keyManagement[host] = AccessKey(resp.access_token,resp.expire * 1000 + currentTimeMillis())
+        }
     }
 
     suspend fun get(host: String):AccessKey{

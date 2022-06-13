@@ -5,7 +5,7 @@ import operation.request.Requester
 import operation.request.Response
 import utils.KeyExchangeService
 
-class KeyExchangePipeline() : Pipeline {
+object KeyExchangePipeline : Pipeline {
     override val priority: Int = 1
     override suspend fun beforeRequest(request: Requester, data: Any) {
         val key = KeyExchangeService.get(request.domain)
