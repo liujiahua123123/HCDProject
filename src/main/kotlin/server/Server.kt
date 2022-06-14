@@ -4,14 +4,24 @@ import PORT
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.html.currentTimeMillis
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import server.route.clusterRoute
 import server.route.hostRoute
 import server.route.userRoute
 import server.trace.Traceable
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.abs
 
 object Server {
     suspend fun start() {
@@ -42,15 +52,22 @@ data class ServerResponse<T>(
     val data: T
 )
 
+data class ServerRequest<T>(
+    val data: T,
+    val identifier: String,
+    val requestId: String,
+    val requestTime: Long
+)
+
 /**
  * Use to indicate this error is triggered by user's input
  * The server response won't include stacktrace for UserInputError
  */
 class UserInputError(message: String): Exception(message)
 
-fun userInputError(message: Any){
-    throw UserInputError(message.toString())
-}
+
+@kotlin.jvm.Throws(UserInputError::class)
+fun userInputError(message: Any):Nothing = throw UserInputError(message.toString())
 
 private suspend fun <T> ApplicationCall.respond(response: ServerResponse<T>) {
     this.respond(ServerJson.encodeToString(response))
@@ -124,3 +141,74 @@ suspend fun <T : Any> ApplicationCall.respondTraceable(traceable: Traceable<T>) 
 }
 
 
+
+
+fun Routing.handleDataPost(path: String, receiver: suspend PipelineContext<Unit, ApplicationCall>.() -> Unit) {
+    post(path) {
+        try {
+            this.receiver()
+        } catch (e: Throwable) {
+            call.respondThrowable(e)
+        }
+    }
+}
+suspend inline fun <reified T : Any> ApplicationCall.readDataRequest(): T {
+    val text = String(receiveStream().readBytes(), Charsets.UTF_8)
+
+    val req: ServerRequest<T> = try {
+         ServerJson.decodeFromString(text)
+    }catch (e: SerializationException){
+        userInputError("bad input $text")
+    }
+
+    return RequestShield(req)
+}
+
+
+
+object RequestShield{
+    private const val recordSize = 100
+    private val recentRequests = Array<String?>(recordSize) { null }
+    private val set = hashSetOf<String>()
+    private var indexer = 0
+    private val lock = Mutex()
+    private const val timeDelay = 12000
+
+
+    suspend operator fun <T : Any> invoke(input: ServerRequest<T>):T {
+        val current = currentTimeMillis()
+        val request = input.requestTime
+        val visitor = input.requestId
+
+        if (visitor.length > 50) {
+            userInputError("bad request")
+        }
+        val visitorData = visitor.split("-")
+        if (visitorData.size != 5) {
+            userInputError("bad request")
+        }
+        if (abs(current - request) > timeDelay) {
+            userInputError("request expired")
+        }
+        lock.withLock {
+            if (set.contains(visitor)) {
+                userInputError("repeated request")
+            }
+            val index = indexer % recordSize
+
+            val toRemove = recentRequests[index]
+            if(toRemove != null){
+                set.remove(toRemove)
+            }
+            set.add(visitor)
+            recentRequests[index] = visitor
+            indexer += 1
+
+            if(indexer > recordSize){
+                indexer-= recordSize
+            }
+        }
+
+        return input.data
+    }
+}
