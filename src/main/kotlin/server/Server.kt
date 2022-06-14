@@ -42,6 +42,15 @@ data class ServerResponse<T>(
     val data: T
 )
 
+/**
+ * Use to indicate this error is triggered by user's input
+ * The server response won't include stacktrace for UserInputError
+ */
+class UserInputError(message: String): Exception(message)
+
+fun userInputError(message: Any){
+    throw UserInputError(message.toString())
+}
 
 private suspend fun <T> ApplicationCall.respond(response: ServerResponse<T>) {
     this.respond(ServerJson.encodeToString(response))
@@ -52,8 +61,8 @@ private suspend fun <T> ApplicationCall.respond(response: ServerResponse<T>) {
  * This could cause by invalid arguments, or other service issue (RestAPI Timeout)
  */
 suspend fun ApplicationCall.respondThrowable(e: Throwable) {
-    val errorMessage = if (e is Error) {
-        e.message ?: e.stackTrace.joinToString("</br>")
+    val errorMessage = if (e is UserInputError) {
+        e.message!!
     } else {
         e.message + "</br>" + e.stackTrace.joinToString("</br>")
     }
@@ -71,7 +80,7 @@ suspend fun ApplicationCall.respondThrowable(e: Throwable) {
 /**
  * Respond to front end that the process has COMPLETE and OK
  */
-suspend fun ApplicationCall.respondOK(e: Throwable) {
+suspend fun ApplicationCall.respondOK() {
     this.respond(
         ServerResponse(
             success = true,
@@ -113,3 +122,5 @@ suspend fun <T : Any> ApplicationCall.respondTraceable(traceable: Traceable<T>) 
             this.respondThrowable(traceable.getFailureReason())
     }
 }
+
+

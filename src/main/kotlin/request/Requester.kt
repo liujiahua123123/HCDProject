@@ -11,6 +11,7 @@ import io.ktor.client.statement.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.html.MetaDataContent
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -19,37 +20,37 @@ import sslTrustManager
 import utils.RequestBodyException
 import utils.ResponseBodyException
 import utils.asMap
+import utils.forEachNonNullPair
 import java.util.PriorityQueue
 
 val client = HttpClient(CIO) {
-    install(ContentNegotiation){
-        json(Json{
-            ignoreUnknownKeys=true
+    install(ContentNegotiation) {
+        json(Json {
+            ignoreUnknownKeys = true
             prettyPrint = true
             isLenient = true
             encodeDefaults = true
         })
     }
     engine {
-        https{
+        https {
             trustManager = sslTrustManager
         }
     }
 }
 
 
-
-interface Pipeline{
+interface Pipeline {
     val priority: Int
     suspend fun beforeRequest(request: Requester, data: Any)
 
     suspend fun afterResponse(request: Requester, response: Response)
 
-    suspend fun onThrowable(request: Requester, throwable: Throwable){}
+    suspend fun onThrowable(request: Requester, throwable: Throwable) {}
 }
 
-class Requester(){
-    enum class Method(val ktorMethod: HttpMethod){
+class Requester() {
+    enum class Method(val ktorMethod: HttpMethod) {
         GET(HttpMethod.Get),
         POST(HttpMethod.Post),
         PUT(HttpMethod.Put),
@@ -66,34 +67,34 @@ class Requester(){
     var domain: String = ""
 
     private val path: MutableList<String> = mutableListOf()
-    private fun addPathSegment(parameter: String){
+    private fun addPathSegment(parameter: String) {
         path.add(parameter)
     }
 
     lateinit var data: Any
 
-    private val headers: MutableList<Pair<String,String>> = mutableListOf()
-    fun addHeader(key:String, value:String) = headers.add(Pair(key,value))
+    private val headers: MutableList<Pair<String, String>> = mutableListOf()
+    fun addHeader(key: String, value: String) = headers.add(Pair(key, value))
 
-    fun addPathParameter(path: String){
+    fun addPathParameter(path: String) {
         this.path.addAll(path.split("/").filter { it.isNotEmpty() })
     }
 
     private val pipelines: PriorityQueue<Pipeline> = PriorityQueue { o1, o2 -> o1.priority - o2.priority }
     fun addPipeline(pipeline: Pipeline) = pipelines.add(pipeline)
 
-    suspend inline fun <reified T:Any> send(data: T): Response {
-        if(this.method == Method.GET || this.method == Method.FORM_POST){
+    suspend inline fun <reified T : Any> send(data: T): Response {
+        if (this.method == Method.GET || this.method == Method.FORM_POST) {
             return sendImpl(data.asMap())
-        }else{
+        } else {
             return sendImpl(data)
         }
     }
 
-    fun buildURL(builder:URLBuilder = URLBuilder()):URLBuilder{
-        return builder.also{
+    fun buildURL(builder: URLBuilder = URLBuilder()): URLBuilder {
+        return builder.also {
             it.host = this@Requester.domain.substringBeforeLast(":")
-            if(this@Requester.domain.contains(":")) {
+            if (this@Requester.domain.contains(":")) {
                 it.port = this@Requester.domain.substringAfterLast(":").toInt()
             }
             it.pathSegments = this@Requester.path
@@ -125,43 +126,31 @@ class Requester(){
 
                 /* Type Erase Warning */
 
-                when (this@Requester.method) {
-                    Method.FORM_POST -> {
-                        try {
-                            val content: Parameters = Parameters.build {
-                                (data as Map<*, *>).forEach {
-                                    if(it.value != null) {
-                                        append(it.key as String, it.value.toString())
-                                    }
+                try {
+                    when (this@Requester.method) {
+                        Method.FORM_POST -> {
+                            setBody(FormDataContent(Parameters.build {
+                                (data as Map<*, *>).forEachNonNullPair { key, v ->
+                                    append(key, v.toString())
                                 }
-                            }
-                            val form = FormDataContent(content)
-                            setBody(form)
-                        } catch (e: Exception) {
-                            throw RequestBodyException("Failed to build FORM POST request with given data $data").apply {
-                                addSuppressed(e)
+                            }))
+                        }
+
+                        Method.GET, Method.DELETE -> {
+                            (data as Map<*, *>).forEachNonNullPair { key, v ->
+                                parameter(key, v)
                             }
                         }
-                    }
 
-                    Method.GET -> {
-                        try {
-                            (data as Map<*, *>).forEach {
-                                if(it.value != null) {
-                                    parameter(it.key as String, it.value)
-                                }
-                            }
-                        } catch (e: Exception) {
-                            throw RequestBodyException("Failed to build GET request with given data $data").apply {
-                                addSuppressed(e)
-                            }
+                        else -> {
+                            contentType(ContentType.Application.Json)
+                            //auto content negotiation
+                            setBody(data)
                         }
                     }
-
-                    else -> {
-                        contentType(ContentType.Application.Json)
-                        //content negotiation
-                        setBody(data)
+                } catch (e: Throwable) {
+                    throw RequestBodyException("Failed to build ${this.method} request with $data").apply {
+                        addSuppressed(e)
                     }
                 }
             }
@@ -174,7 +163,7 @@ class Requester(){
                     it.afterResponse(this@Requester, this)
                 }
             }
-        }catch (e: Throwable){
+        } catch (e: Throwable) {
             pipelines.forEach {
                 it.onThrowable(this@Requester, e)
             }
@@ -187,11 +176,11 @@ class Requester(){
 data class Response(
     val statusCode: Int,
     val body: String
-){
-    inline fun <reified T:Any> parse():T{
+) {
+    inline fun <reified T : Any> parse(): T {
         try {
             return ServerJson.decodeFromString(this.body)
-        }catch (e:Exception){
+        } catch (e: Exception) {
             throw ResponseBodyException("Failed to deserialize response as ${T::class.simpleName}, raw data = $body").apply {
                 addSuppressed(e)
             }
