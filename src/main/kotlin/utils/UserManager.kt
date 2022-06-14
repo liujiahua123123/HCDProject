@@ -12,6 +12,7 @@ interface User {
     val uuid: String
 }
 
+@kotlinx.serialization.Serializable
 data class SavedUser(
     override val username: String,
     override val password: String,
@@ -52,13 +53,17 @@ object UserManager {
     const val COOKIE_USERNAME = "_user"
     const val COOKIE_UID = "_uid"
 
-    suspend fun addUser(username: String, password: String) {
+    suspend fun addUser(username: String, password: String):User?{
+        val user = SavedUser(username, password)
         lock.withLock {
             val list = file.deserializeList<SavedUser>()
-            list.removeAll { it.username == username }
-            list.add(SavedUser(username, password))
+            if(list.any{ it.username == username }){
+                return null
+            }
+            list.add(user)
             file.writeList(list)
         }
+        return user
     }
 
     fun login(username: String, password: String): User? {

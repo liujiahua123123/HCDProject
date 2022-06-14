@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SSO</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.30/vue.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"
+          crossorigin="anonymous"/>
+    <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="utils.js"></script>
+
+    <script>
+        $(window).ready(function () {
+            function dp(path){
+                const u = $('#username').val()
+                const p = $('#password').val()
+                if(u.trim() === "" || p.trim() === ""){
+                    mdui.snackbar({
+                        message: 'Invalid Input',
+                        position: 'right-top',
+                    });
+                    return
+                }
+                document.dataPost(path,{
+                    username: u,
+                    password: p
+                },function (success, data) {
+                    if(success){
+                        mdui.snackbar({
+                            message: 'Login Success, Redirecting',
+                            position: 'right-top',
+                        });
+                        setTimeout(function () {
+                            document.location.href = "/"
+                        },100)
+                    }
+                })
+            }
+            $("#login-button").click(function (){
+                dp("/login")
+            })
+
+            $("#reg-button").click(function () {
+                dp("/register")
+            })
+        })
+    </script>
+</head>
+<body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
+
+<div class="mdui-container " style="padding-top: 20vh;">
+    <div class="mdui-shadow-5 mdui-typo" style="width: 70%; margin-left: 15%;padding: 10px 10px 14px;">
+        <div>
+            <div style="text-align: center">
+                <img src="logo.svg" style="height: 10vh; margin-top: 5%">
+                <h3>HCD Login</h3>
+            </div>
+
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">Username</label>
+                <input id="username" name="username" class="mdui-textfield-input" type="text"
+                       placeholder="Enter Username"/>
+            </div>
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">Password</label>
+                <input id="password" name="password" class="mdui-textfield-input" type="password"
+                       placeholder="Enter Password"/>
+            </div>
+            <div class="mdui-row-xs-2" style="margin-top: 5px">
+                <div class="mdui-col">
+                    <button id="login-button" class="mdui-btn mdui-btn-block mdui-color-theme mdui-ripple">
+                        Login
+                    </button>
+                </div>
+                <div class="mdui-col">
+                    <button id="reg-button" class="mdui-btn mdui-btn-block mdui-color-theme mdui-ripple">
+                        Register
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+</body>
+</html>

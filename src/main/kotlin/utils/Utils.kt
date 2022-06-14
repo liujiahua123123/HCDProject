@@ -195,3 +195,4 @@ inline fun <reified T : Any> File.deserialize(defaultCreator:() -> T): T{
     return FileJson.decodeFromString(text)
 }
 
+fun String.akamaiHash():String = "" + this.map { it.toInt() }.filter { it in 49..127 }.sum()
