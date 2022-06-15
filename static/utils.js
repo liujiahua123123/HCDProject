@@ -108,7 +108,7 @@
                         generalIndicator.hide()
                         progressIndicator.show()
 
-                        let percentage = res.data.currStep / res.data.totalStep
+                        let percentage = res.data.currStep / (res.data.totalStep + 1)
                         if(percentage > 1){
                             percentage = 1
                         }
@@ -118,7 +118,7 @@
 
                         setTimeout(function () {
                             doc.dataPost("/trace",{"traceId": res.data.traceId},callback)
-                        },500)
+                        },444)
                     }else{
                         progressIndicator.hide()
                         generalIndicator.show()
