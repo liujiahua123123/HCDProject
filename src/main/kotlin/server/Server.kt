@@ -22,6 +22,7 @@ import server.route.commonRoute
 import server.route.hostRoute
 import server.route.userRoute
 import server.trace.Traceable
+import utils.PortalAccessManagement
 import utils.User
 import utils.UserManager
 import utils.akamaiHash
@@ -254,5 +255,16 @@ suspend fun PipelineContext<Unit, ApplicationCall>.ifLogin(block: suspend Pipeli
         block(this, u)
     } else {
         call.respondRedirect("/login")
+    }
+}
+
+suspend fun PipelineContext<Unit, ApplicationCall>.ifFromPortalPage(block: suspend PipelineContext<Unit, ApplicationCall>.(user: User, portal: String) -> Unit) {
+    ifLogin { user ->
+        val referer = call.request.header("referer")?: userInputError("Missing referer header")
+        val portal = referer.split("/").firstOrNull { it.contains(".") } ?: userInputError("Failed to find host info in referer header $referer")
+        if(!PortalAccessManagement.canAccess(user,portal)){
+            userInputError("You are not allowed to access portal: $portal, please back to main page")
+        }
+        block(this, user, portal)
     }
 }

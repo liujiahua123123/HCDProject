@@ -1,9 +1,11 @@
 package utils
 
 import io.ktor.server.application.*
+import io.ktor.util.collections.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.html.currentTimeMillis
+import java.util.Collections
 
 
 interface User {
@@ -157,12 +159,23 @@ object UserDataManagement {
             }
         }
     }
-
 }
 
+object PortalAccessManagement{
+    private val map = ConcurrentMap<String, MutableList<String>>()
+
+    fun add(user: User, portal: String){
+        map
+            .getOrPut(user.uuid){Collections.synchronizedList(mutableListOf<String>())}
+            .add(portal)
+    }
+
+    fun canAccess(user: User, portal: String): Boolean{
+        return map.getOrDefault(user.uuid, emptyList()).contains(portal)
+    }
+}
 
 
 inline fun <reified T : UserData> User.getAllData(): MutableList<T> = UserDataManagement.getAll(uuid)
 suspend fun User.saveData(data: UserData) = UserDataManagement.save(uuid,data)
-
 suspend inline fun <reified T:UserData> User.dataScope(block: (MutableList<T>) -> Boolean) = UserDataManagement.scope(uuid,block)

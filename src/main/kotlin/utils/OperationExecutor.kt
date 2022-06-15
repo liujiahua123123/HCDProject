@@ -52,7 +52,7 @@ object OperationExecutor {
 }
 
 
-class Job<T : Any>(private val totalStep: Int) : Traceable{
+class Job<T : Any>(var totalStep: Int) : Traceable{
     override val id: String = createUuid4()
 
     override var state: Traceable.State = Traceable.State.SCHEDULING
@@ -63,6 +63,14 @@ class Job<T : Any>(private val totalStep: Int) : Traceable{
 
     var currStep: Int = 1
     var currStepName: String = "initiating"
+
+    fun updateProgress(currStep: Int, totalStep: Int, name: String){
+        this.currStep = currStep
+        this.totalStep = totalStep
+        this.currStepName = name
+    }
+
+    fun updateProgress(name: String) = updateProgress(currStep + 1, totalStep, name)
 
     override fun getResponse(): String {
         return resultHolder!!

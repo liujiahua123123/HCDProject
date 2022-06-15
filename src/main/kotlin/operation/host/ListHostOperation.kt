@@ -25,8 +25,3 @@ class ListHostOperation: AuthedHttpOperation<ListHostReq,ListHostResp>(
     }
 }
 
-
-suspend fun main(){
-    KeyExchangeService.register("172.16.4.248:8443","a")
-    println(ListHostOperation().apply { portal = "172.16.4.248:8443" }(ListHostReq()))
-}

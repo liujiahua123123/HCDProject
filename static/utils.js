@@ -114,7 +114,7 @@
                         }
                         let width = "" + percentage * 100 + "%"
                         progressBar.css("width",width)
-                        stepName.text("" + res.data.currStep + "/" +  res.data.totalStep + " " + res.data.currStepName)
+                        stepName.text("" + res.data.currStep + "/" +  (res.data.totalStep + 1) + " " + res.data.currStepName)
 
                         setTimeout(function () {
                             doc.dataPost("/trace",{"traceId": res.data.traceId},callback)
@@ -141,5 +141,4 @@
         }
 
     }
-
 })(document)

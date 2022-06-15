@@ -10,3 +10,14 @@ data class HostInfo(
     val clusterId: String?,
     val allowedToLeaveCluster: Boolean
 )
+
+@Serializable
+data class DiskInfo(
+    val diskId: String,
+    val mountPoint: String,
+    val hostId: String,
+    val state: String,
+    val deviceNodeName: String,
+    val diskTagList: MutableList<String>,
+    val diskSerialNumber: String
+)

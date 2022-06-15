@@ -45,9 +45,7 @@ fun Routing.userRoute(){
             val data = call.readDataRequest<ConnectPortalRequest>()
 
             call.respondTraceable(OperationExecutor.addExecutorTask<LoginResp>(2){
-                this.currStepName = "Connecting"
-                this.currStep++
-                this.currStepName = "Exchanging Token"
+                updateProgress("Exchanging Token")
                 val resp = LoginOperation().apply {
                     this.portal = data.portal
                 }.invoke(
@@ -66,6 +64,7 @@ fun Routing.userRoute(){
                 }
 
                 KeyExchangeService.register(data.portal,data.username,data.password,resp)
+                PortalAccessManagement.add(user, data.portal)
                 resp
             })
         }
