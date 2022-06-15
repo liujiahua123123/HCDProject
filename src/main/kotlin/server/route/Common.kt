@@ -3,7 +3,8 @@ package server.route
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import server.handleDataPost
+import server.*
+import utils.OperationExecutor
 import utils.STATIC_FILES
 
 fun Routing.commonRoute(){
@@ -15,7 +16,17 @@ fun Routing.commonRoute(){
         call.respondFile(STATIC_FILES.findFile("logo.svg"))
     }
 
-    handleDataPost("/login"){
-
+    handleDataPost("/trace"){
+        ifLogin {
+            val data = call.readDataRequest<TraceRequest>()
+            val job = OperationExecutor.get(data.traceId)?: userInputError("Job not found")
+            call.respondTraceable(job)
+        }
     }
+
 }
+
+@kotlinx.serialization.Serializable
+data class TraceRequest(
+    val traceId: String
+)

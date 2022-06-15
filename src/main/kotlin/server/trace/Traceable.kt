@@ -1,14 +1,12 @@
 package server.trace
 
-import utils.createUuid4
-
 /**
  * Traceable is a kind of respond that server generated for some request, similar to Future
  *
  * This means that the request take time and the server is handling it, front end should
  * check for complete with a schedule task
  */
-interface Traceable<T:Any> {
+interface Traceable {
     val id: String
 
     enum class State{
@@ -19,15 +17,19 @@ interface Traceable<T:Any> {
 
     val state:State
 
-    abstract fun getResult():T
-    abstract fun getFailureReason():Throwable
+    /**
+     * Serialized Result
+     */
+    fun getResponse():String
+    fun getFailureReason():Throwable
 
-    abstract fun toTracingData(): TracingData
+    fun toTracingData(): TracingData
 }
 
 @kotlinx.serialization.Serializable
 data class TracingData(
     val traceId: String,
+    val totalStep: Int,
     val currStep: Int,
-    val stepNames: List<String>
+    val currStepName: String
 )

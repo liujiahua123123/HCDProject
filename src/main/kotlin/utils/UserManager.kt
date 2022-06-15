@@ -99,3 +99,70 @@ object UserManager {
     }
 
 }
+
+
+@kotlinx.serialization.Serializable
+sealed class UserData(
+    val id:String = createUuid4(),
+)
+
+@kotlinx.serialization.Serializable
+data class ConnectionHistory(
+    val portal: String,
+    val username: String,
+    val password: String
+): UserData()
+
+object UserDataManagement {
+    val lock = Mutex()
+    val folder = DATA_FILES.findSub("userdata")
+
+    fun readAll(uid: String): MutableList<UserData> {
+        return folder.findFile("$uid.json").deserializeList<UserData>()
+    }
+
+    inline fun <reified T : UserData> getAll(uid: String): MutableList<T> {
+        return readAll(uid).filterIsInstanceTo(mutableListOf())
+    }
+
+    inline fun <reified T : UserData> first(uid: String): T? {
+        return readAll(uid).firstOrNull{ it is T } as T?
+    }
+
+    suspend fun save(uid: String, userData: UserData){
+        lock.withLock {
+            folder.findFile("$uid.json").writeList(readAll(uid).apply {
+                removeIf { it.id == userData.id }
+                add(0, userData)
+            })
+        }
+    }
+
+    suspend fun delete(uid: String, dataId: String){
+        lock.withLock {
+            folder.findFile("$uid.json").writeList(this.readAll(uid).apply{removeIf { it.id == dataId }})
+        }
+    }
+
+    suspend inline fun <reified T:UserData> scope(uid: String, block: (MutableList<T>) -> Boolean){
+        val all = readAll(uid)
+        val selected = getAll<T>(uid)
+        selected.forEach {
+            all.remove(it)
+        }
+        if(block(selected)){
+            all.addAll(0,selected)
+            lock.withLock {
+                folder.findFile("$uid.json").writeList(all)
+            }
+        }
+    }
+
+}
+
+
+
+inline fun <reified T : UserData> User.getAllData(): MutableList<T> = UserDataManagement.getAll(uuid)
+suspend fun User.saveData(data: UserData) = UserDataManagement.save(uuid,data)
+
+suspend inline fun <reified T:UserData> User.dataScope(block: (MutableList<T>) -> Boolean) = UserDataManagement.scope(uuid,block)

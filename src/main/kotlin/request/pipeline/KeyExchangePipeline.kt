@@ -8,7 +8,7 @@ import utils.KeyExchangeService
 object KeyExchangePipeline : Pipeline {
     override val priority: Int = 1
     override suspend fun beforeRequest(request: Requester, data: Any) {
-        val key = KeyExchangeService.get(request.domain)
+        val key = KeyExchangeService.get(request.portal)
         request.addHeader("Authorization","bearer ${key.content}")
     }
 

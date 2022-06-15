@@ -38,7 +38,7 @@ object KeyExchangeService{
         val resp =
             LoginOperation()
                 .apply {
-                    domain = host
+                    portal = host
                     loggerName = "TokenRenew"
                 }.invoke(
                     with(credentialManagement[host]!!) {

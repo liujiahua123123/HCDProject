@@ -1,7 +1,6 @@
 package server
 
 import PORT
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -23,9 +22,9 @@ import server.route.commonRoute
 import server.route.hostRoute
 import server.route.userRoute
 import server.trace.Traceable
+import utils.User
+import utils.UserManager
 import utils.akamaiHash
-import java.util.Collections
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 
 object Server {
@@ -99,7 +98,9 @@ suspend fun ApplicationCall.respondThrowable(e: Throwable) {
     val errorMessage = if (e is UserInputError) {
         e.message!!
     } else {
-        e.message + "</br>" + e.stackTrace.joinToString("</br>")
+        ("<h3>Encounter " + e.javaClass.simpleName) + "</h3>" + e.message.run { if(this != null){
+            "$this</br>"
+        }else{""} } + "</br>Exception Stacktrace:</br>" + e.stackTrace.joinToString("</br>")
     }
 
     this.respond(
@@ -142,7 +143,7 @@ suspend inline fun <reified T : Any> ApplicationCall.respondOK(data: T) {
 }
 
 
-suspend inline fun <reified T : Any> ApplicationCall.respondTraceable(traceable: Traceable<T>) {
+suspend inline fun ApplicationCall.respondTraceable(traceable: Traceable) {
     when (traceable.state) {
         Traceable.State.SCHEDULING ->
             this.respond(
@@ -154,7 +155,7 @@ suspend inline fun <reified T : Any> ApplicationCall.respondTraceable(traceable:
                 )
             )
         Traceable.State.COMPUTED ->
-            this.respondOK(traceable.getResult())
+            this.respond(traceable.getResponse())
         Traceable.State.THROWN ->
             this.respondThrowable(traceable.getFailureReason())
     }
@@ -239,5 +240,19 @@ object RequestShield {
         }
 
         return input.data
+    }
+}
+
+suspend fun PipelineContext<Unit, ApplicationCall>.ifLogin(block: suspend PipelineContext<Unit, ApplicationCall>.(user: User) -> Unit) {
+    val a = call.request.cookies[UserManager.COOKIE_TOKEN]
+    if (a == null) {
+        call.respondRedirect("/login")
+        return
+    }
+    val u = UserManager.verifyLoginToken(a)
+    if (u is User) {
+        block(this, u)
+    } else {
+        call.respondRedirect("/login")
     }
 }

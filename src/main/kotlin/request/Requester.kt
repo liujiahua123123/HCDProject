@@ -1,18 +1,13 @@
 package operation.request
 
 import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
-import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.html.MetaDataContent
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import server.ServerJson
@@ -64,7 +59,7 @@ class Requester() {
     var protocol: URLProtocol = URLProtocol.HTTPS
 
     //domain should include port
-    var domain: String = ""
+    var portal: String = ""
 
     private val path: MutableList<String> = mutableListOf()
     private fun addPathSegment(parameter: String) {
@@ -93,9 +88,9 @@ class Requester() {
 
     fun buildURL(builder: URLBuilder = URLBuilder()): URLBuilder {
         return builder.also {
-            it.host = this@Requester.domain.substringBeforeLast(":")
-            if (this@Requester.domain.contains(":")) {
-                it.port = this@Requester.domain.substringAfterLast(":").toInt()
+            it.host = this@Requester.portal.substringBeforeLast(":")
+            if (this@Requester.portal.removePrefix("https://").removePrefix("http://").contains(":")) {
+                it.port = this@Requester.portal.substringAfterLast(":").toInt()
             }
             it.pathSegments = this@Requester.path
             it.protocol = this@Requester.protocol

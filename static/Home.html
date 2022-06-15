@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HOME</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.30/vue.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"
+          crossorigin="anonymous"/>
+    <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="utils.js"></script>
+
+    <script>
+        let vm = null
+        $(window).ready(function () {
+            const SourceData = {
+                data() {
+                    return {
+                        data: [
+                        ]
+                    }
+                },
+                methods: {
+                    update(newData) {
+                        this.data = newData
+                    },
+                    updated() {
+                        this.$nextTick(function () {
+                            console.log("VUE updated")
+                            mdui.mutation()
+                        })
+                    }
+                }
+            }
+            app = Vue.createApp(SourceData)
+            app.component('recent-connection', {
+                props: ['portal','username','password'],
+                template: '#recent-connection',
+                methods:{
+                    onclick: function (q) {
+                        console.log(q)
+                        $("#portal").val(this.portal)
+                        $("#username").val(this.username)
+                        $("#password").val(this.password)
+                    },
+                },
+            })
+            vm = app.mount("#recent")
+
+            document.dataPost("/portal/history",{},function (_,data) {
+                vm.update(data)
+            })
+
+            $("#login-button").click(function () {
+                document.dataPost("/portal/connect",{
+                    portal: $("#portal").val(),
+                    username: $("#username").val(),
+                    password: $("#password").val()
+                },function (_,data) {
+
+                })
+            })
+
+        })
+    </script>
+
+    <style>
+        @media screen and (min-width: 1201px) {
+            #login-window {
+                width: 70%;
+                max-width: 70%;
+            }
+
+            #recent {
+                width: 30%;
+                max-width: 30%;
+            }
+
+            #container {
+                display: flex;
+            }
+        }
+
+        @media screen and (max-width: 1200px) {
+            #login-window {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            #recent {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            #container {
+                display: block;
+            }
+        }
+    </style>
+
+</head>
+<template id="recent-connection">
+    <li class="mdui-list-item mdui-ripple" v-on:click="onclick">
+        <i class="mdui-list-item-icon mdui-icon material-icons">send</i>
+        <div class="mdui-list-item-content">{{portal}}</div>
+    </li>
+</template>
+
+<body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
+<div class="mdui-container">
+    <div id="container" style="margin-top: 10vh;">
+        <div id="login-window" class="mdui-shadow-1 mdui-typo">
+            <div style="padding: 15px">
+                <div style="text-align: center">
+                    <img src="logo.svg" style="height: 10vh; margin-top: 5%">
+                    <h3>Input Address</h3>
+                </div>
+
+                <div class="mdui-textfield">
+                    <label class="mdui-textfield-label">Portol</label>
+                    <input id="portal" name="portal" class="mdui-textfield-input" type="url"
+                           placeholder="172.16.4.248:8443"/>
+                </div>
+                <div class="mdui-textfield">
+                    <label class="mdui-textfield-label">RestAPI-Username</label>
+                    <input id="username" name="port" class="mdui-textfield-input" type="text" value="admin"/>
+                </div>
+                <div class="mdui-textfield">
+                    <label class="mdui-textfield-label">RestAPI-Password</label>
+                    <input id="password" name="port" class="mdui-textfield-input" type="text" value="Hello123!"/>
+                </div>
+                <div class="mdui-row-xs-1">
+                    <div class="mdui-col">
+                        <button id="login-button" type="submit"
+                                class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple">
+                            Connect
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="recent" class="mdui-shadow-21">
+            <ul class="mdui-list">
+                <recent-connection v-for="con in data"
+                v-bind:portal="con.portal"
+                v-bind:username="con.username"
+                v-bind:password="con.password">
+                </recent-connection>
+            </ul>
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>

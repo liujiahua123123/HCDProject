@@ -8,7 +8,7 @@
     }
 
     const shadow = '<div id="loading"\n' +
-        '     style="z-index: 999999;left:0;top:0;width: 100vw;height: 100vh;position: absolute;background: #141414; opacity: 0.6;text-align: center">\n' +
+        '     style="z-index: 999999;left:0;top:0;width: 100vw;height: 100vh;position: absolute;background: #141414; opacity: 0.9;text-align: center">\n' +
         '    <div style="margin-top: 45vh;width: 100vw; ">\n' +
         '        <div id="general-indicator">\n' +
         '            <div class="mdui-spinner"></div>\n' +
@@ -19,7 +19,7 @@
         '            </div>\n' +
         '            <blockquote style="text-align: left">\n' +
         '                <footer>\n' +
-        '                    1/3  <p id="step-name"></p>\n' +
+        '                    <p id="step-name"></p>\n' +
         '                </footer>\n' +
         '            </blockquote>\n' +
         '        </div>\n' +
@@ -107,6 +107,14 @@
                     if(res.isTracingTask){
                         generalIndicator.hide()
                         progressIndicator.show()
+
+                        let percentage = res.data.currStep / res.data.totalStep
+                        if(percentage > 1){
+                            percentage = 1
+                        }
+                        let width = "" + percentage * 100 + "%"
+                        progressBar.css("width",width)
+                        stepName.text("" + res.data.currStep + "/" +  res.data.totalStep + " " + res.data.currStepName)
 
                         setTimeout(function () {
                             doc.dataPost("/trace",{"traceId": res.data.traceId},callback)

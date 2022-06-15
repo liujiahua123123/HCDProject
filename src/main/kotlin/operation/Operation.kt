@@ -6,7 +6,6 @@ import request.pipeline.AsyncLogger
 import request.pipeline.StatusChecker
 import operation.request.Requester
 import request.pipeline.KeyExchangePipeline
-import kotlin.math.log
 
 interface Operation<I, O> {
     suspend operator fun invoke(input: I): O
@@ -18,17 +17,17 @@ abstract class HttpOperation<I, O>(
     val method: Requester.Method
 ) : Operation<I, O> {
 
-    var domain: String = ""
+    var portal: String = ""
 
     var loggerName = this.javaClass.simpleName.removeSuffix("Operation")
 
     open fun getRequester(): Requester {
-        if (domain.isEmpty()) {
+        if (portal.isEmpty()) {
             error("HttpOperation need a specific domain")
         }
         return Requester().also {
             it.addPathParameter(path)
-            it.domain = domain
+            it.portal = portal
             it.method = method
             it.addPipeline(StatusChecker)
             it.addPipeline(AsyncLogger(loggerName))
@@ -49,7 +48,7 @@ abstract class AuthedHttpOperation<I, O>(
 suspend fun main() {
     val op = LoginOperation()
 
-    op.domain = "172.16.4.248:8443"
+    op.portal = "172.16.4.248:8443"
     println(
         op(
             LoginReq(
