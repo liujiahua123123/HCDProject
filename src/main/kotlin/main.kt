@@ -7,7 +7,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
-const val PORT = 5000
+const val PORT = 3000
 
 //always trust
 val sslTrustManager = object : X509TrustManager {

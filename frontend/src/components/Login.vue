@@ -1,4 +1,4 @@
-<template v-if="loggedIn">
+<template>
     <div class="mdui-container container" style="padding-top: 20vh;">
         <div class="mdui-shadow-5 mdui-typo" style="width: 70%; margin-left: 15%;padding: 10px;">
             <div>
@@ -35,6 +35,5 @@
 <script>
 export default {
     name: 'Login', 
-    loggedIn: true
 }
 </script>
