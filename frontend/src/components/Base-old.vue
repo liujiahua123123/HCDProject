@@ -1,13 +1,12 @@
 <script setup>
 import Login from './Login.vue'
+var loginPage = true
 </script>
 
 <template>
 <head>
 <title>Login</title>
 <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script> -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"
-crossorigin="anonymous"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"
 crossorigin="anonymous"/>
 <link
@@ -76,32 +75,33 @@ crossorigin="anonymous"/>
 messages %} {% for category, message in messages %} {% if category ==
 "error" %} -->
 <!-- EMBEDDED IF - TEMPLATE -->
-<div class="alert alter-dismissable fade show" style="background-color: #F9BA16 !important; color: #0C0E12 !important"  role="alert">
-<h4>Error!</h4>
-<hr/>
-<button type="button" class="close" data-dismiss="alert">
-    <span aria-hidden="true">&times;</span>
-</button>
-<p class="mb-0">{{ message }}</p>
+<div v-if="loggedIn">
+    <div class="alert alter-dismissable fade show" style="background-color: #F9BA16 !important; color: #0C0E12 !important"  role="alert">
+    <h4>Error!</h4>
+    <hr/>
+    <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <p class="mb-0">{{ message }}</p>
 
+    </div>
+    <!-- {% else %} -->
+    <!-- EMBEDDED IF - TEMPLATE -->
+    <div class="alert alter-dismissable fade show" style="background-color: #F9BA16 !important; color: #0C0E12 !important" role="alert">
+    <h4>Success!</h4>
+    <hr/>
+    <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <p class="mb-0">{{ message }}</p>
+    </div>
 </div>
-<!-- {% else %} -->
-<!-- EMBEDDED IF - TEMPLATE -->
-<div class="alert alter-dismissable fade show" style="background-color: #F9BA16 !important; color: #0C0E12 !important" role="alert">
-<h4>Success!</h4>
-<hr/>
-<button type="button" class="close" data-dismiss="alert">
-    <span aria-hidden="true">&times;</span>
-</button>
-<p class="mb-0">{{ message }}</p>
 
-</div>
 <!-- {% endif %} {% endfor %} {% endif %} {% endwith %} -->
 <!-- EMBEDDED IF - TEMPLATE -->
 
 <!-- <div class="container">{% block content %} {% endblock %}</div> -->
-<!-- EMBEDDED IF - TEMPLATE -->
-<div class="container"><Login/></div>
+<div class="container" v-if="loginPage"><Login/></div>
 <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
 integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
 crossorigin="anonymous"></script>
@@ -124,8 +124,7 @@ export default {
     name: 'Base', 
     data() {
     return {
-        loggedIn: true,
-        content: 'Logina'
+        loggedIn: false,
         }
     }
 }
