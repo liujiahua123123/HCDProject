@@ -2,6 +2,7 @@ package server.route
 
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.supervisorScope
 import operation.host.*
 import operation.httpOperationScope
 import server.handleDataPost
@@ -10,16 +11,23 @@ import server.respondTraceable
 import utils.DiskInfo
 import utils.OperationExecutor
 
-fun Routing.hostRoute(){
-    handleDataPost("/list"){
+fun Routing.hostRoute() {
+
+    get("/portal/{portal}") {
+
+    }
+
+    handleDataPost("/list") {
         ifFromPortalPage { _, portal ->
-            call.respondTraceable(OperationExecutor.addExecutorTask<List<HostWithDisks>>(numOfStep = 2){
+            call.respondTraceable(OperationExecutor.addExecutorTask<List<HostWithDisks>>(numOfStep = 2) {
                 httpOperationScope(portal) {
                     updateProgress("Listing Hosts")
 
                     val result = mutableListOf<HostWithDisks>()
-                    val hosts = create<ListHostOperation>().invoke(ListHostReq(clusterId = null, onlyFreeHosts = false)).data
+                    val hosts =
+                        create<ListHostOperation>().invoke(ListHostReq(clusterId = null, onlyFreeHosts = false)).data
 
+                    //can be async
                     for (i in hosts.indices) {
                         updateProgress(i + 1, hosts.size, "Listing disks under ${hosts[i].hostName}")
                         result.add(

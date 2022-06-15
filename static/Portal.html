@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.30/vue.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"
+          crossorigin="anonymous"/>
+    <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="utils.js"></script>
+
+    <script>
+
+        $(window).ready(function () {
+            $("#listHost").click(function () {
+                document.dataPost("/list",{},function (success, data) {
+                    console.log(data)
+                })
+            })
+        })
+
+    </script>
+</head>
+<body>
+    <button id="listHost"></button>
+</body>
+</html>

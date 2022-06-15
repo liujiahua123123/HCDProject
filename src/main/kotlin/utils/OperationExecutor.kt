@@ -4,6 +4,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.GlobalScope.coroutineContext
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString
 import operation.Operation
 import server.ServerJson
@@ -61,16 +63,19 @@ class Job<T : Any>(var totalStep: Int) : Traceable{
     var exceptionHolder: Throwable? = null
 
 
-    var currStep: Int = 1
-    var currStepName: String = "initiating"
+    private var currStep: Int = 1
+    private var currStepName: String = "initiating"
+    private val mutex = Mutex()
 
-    fun updateProgress(currStep: Int, totalStep: Int, name: String){
-        this.currStep = currStep
-        this.totalStep = totalStep
-        this.currStepName = name
+    suspend fun updateProgress(currStep: Int, totalStep: Int, name: String){
+        mutex.withLock {
+            this.currStep = currStep
+            this.totalStep = totalStep
+            this.currStepName = name
+        }
     }
 
-    fun updateProgress(name: String) = updateProgress(currStep + 1, totalStep, name)
+    suspend fun updateProgress(name: String) = updateProgress(currStep + 1, totalStep, name)
 
     override fun getResponse(): String {
         return resultHolder!!
