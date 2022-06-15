@@ -90,6 +90,11 @@
 
         requester.onreadystatechange = function () {
             if (requester.readyState === 4) {
+                //redirect
+                if(requester.getResponseHeader("Content-Type").includes("text/html")){
+                    window.location.href = requester.responseURL
+                    return
+                }
                 try {
                     let res = JSON.parse(requester.responseText);
                     if(!res.success){

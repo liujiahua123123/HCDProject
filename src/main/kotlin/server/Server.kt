@@ -1,6 +1,7 @@
 package server
 
 import PORT
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -26,6 +27,7 @@ import utils.PortalAccessManagement
 import utils.User
 import utils.UserManager
 import utils.akamaiHash
+import java.util.ServiceConfigurationError
 import kotlin.math.abs
 
 object Server {
@@ -81,8 +83,9 @@ fun userInputError(message: Any, supp: Throwable? = null): Nothing = throw UserI
     }
 }
 
-suspend inline fun <reified T> ApplicationCall.respond(response: ServerResponse<T>) {
+suspend inline fun <reified T> ApplicationCall.respondData(response: ServerResponse<T>) {
     try {
+        this.response.headers.append("Content-type","application/json; charset=UTF-8",false)
         this.respond(ServerJson.encodeToString(response))
     }catch (e: Throwable){
         //ktor will omit Throwable
@@ -104,7 +107,7 @@ suspend fun ApplicationCall.respondThrowable(e: Throwable) {
         }else{""} } + "</br>Exception Stacktrace:</br>" + e.stackTrace.joinToString("</br>")
     }
 
-    this.respond(
+    this.respondData(
         ServerResponse(
             success = false,
             errorMessage = errorMessage,
@@ -118,7 +121,7 @@ suspend fun ApplicationCall.respondThrowable(e: Throwable) {
  * Respond to front end that the process has COMPLETE and OK
  */
 suspend fun ApplicationCall.respondOK() {
-    this.respond(
+    this.respondData(
         ServerResponse(
             success = true,
             errorMessage = "",
@@ -133,7 +136,7 @@ suspend fun ApplicationCall.respondOK() {
  * plus the data front end need
  */
 suspend inline fun <reified T : Any> ApplicationCall.respondOK(data: T) {
-    this.respond(
+    this.respondData(
         ServerResponse(
             success = true,
             errorMessage = "",
@@ -147,7 +150,7 @@ suspend inline fun <reified T : Any> ApplicationCall.respondOK(data: T) {
 suspend inline fun ApplicationCall.respondTraceable(traceable: Traceable) {
     when (traceable.state) {
         Traceable.State.SCHEDULING ->
-            this.respond(
+            this.respondData(
                 ServerResponse(
                     success = true,
                     errorMessage = "",
@@ -155,8 +158,10 @@ suspend inline fun ApplicationCall.respondTraceable(traceable: Traceable) {
                     data = traceable.toTracingData()
                 )
             )
-        Traceable.State.COMPUTED ->
+        Traceable.State.COMPUTED -> {
+            this.response.headers.append("Content-type", "application/json; charset=UTF-8", false)
             this.respond(traceable.getResponse())
+        }
         Traceable.State.THROWN ->
             this.respondThrowable(traceable.getFailureReason())
     }
@@ -254,6 +259,9 @@ suspend fun PipelineContext<Unit, ApplicationCall>.ifLogin(block: suspend Pipeli
     if (u is User) {
         block(this, u)
     } else {
+        call.response.cookies.appendExpired(UserManager.COOKIE_UID)
+        call.response.cookies.appendExpired(UserManager.COOKIE_TOKEN)
+        call.response.cookies.appendExpired(UserManager.COOKIE_USERNAME)
         call.respondRedirect("/login")
     }
 }
@@ -261,7 +269,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.ifLogin(block: suspend Pipeli
 suspend fun PipelineContext<Unit, ApplicationCall>.ifFromPortalPage(block: suspend PipelineContext<Unit, ApplicationCall>.(user: User, portal: String) -> Unit) {
     ifLogin { user ->
         val referer = call.request.header("referer")?: userInputError("Missing referer header")
-        val portal = referer.split("/").firstOrNull { it.contains(".") } ?: userInputError("Failed to find host info in referer header $referer")
+        val portal = referer.split("/").reversed().firstOrNull { it.contains(".") } ?: userInputError("Failed to find host info in referer header $referer")
         if(!PortalAccessManagement.canAccess(user,portal)){
             userInputError("You are not allowed to access portal: $portal, please back to main page")
         }

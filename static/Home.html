@@ -11,7 +11,7 @@
             integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
             crossorigin="anonymous"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="utils.js"></script>
+    <script src="/utils.js"></script>
 
     <script>
         let vm = null
@@ -55,12 +55,21 @@
             })
 
             $("#login-button").click(function () {
+                let portal = $("#portal").val()
                 document.dataPost("/portal/connect",{
-                    portal: $("#portal").val(),
+                    portal: portal,
                     username: $("#username").val(),
                     password: $("#password").val()
-                },function (_,data) {
-
+                },function (success,data) {
+                    if(success){
+                        mdui.snackbar({
+                            message: 'Redirecting to portal',
+                            position: 'right-top',
+                        });
+                        setTimeout(function () {
+                            document.location.href = "/portal/" + portal
+                        },100)
+                    }
                 })
             })
 

@@ -13,10 +13,6 @@ import utils.OperationExecutor
 
 fun Routing.hostRoute() {
 
-    get("/portal/{portal}") {
-
-    }
-
     handleDataPost("/list") {
         ifFromPortalPage { _, portal ->
             call.respondTraceable(OperationExecutor.addExecutorTask<List<HostWithDisks>>(numOfStep = 2) {
