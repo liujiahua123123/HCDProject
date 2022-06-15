@@ -1,3 +1,5 @@
 /.idea/
 /data/
 /frontend/.vscode/
+/build/
+/.gradle/
