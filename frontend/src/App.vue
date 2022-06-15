@@ -1,0 +1,56 @@
+<script setup>
+import Base from './components/Base.vue'
+</script>
+
+<template>
+  <main>
+  <Base/>
+  </main>
+</template>
+
+<style>
+
+input.largerCheckbox {
+      position: relative;
+      top: 3px;
+      width: 1.5vw;
+      height: 1.5vh;
+    }
+input.form-control:focus{
+  color: #F9BA16;
+  border-width: 0.1vh;
+  border-color: #F9BA16;
+  box-shadow: none;
+}
+h1{
+  color: #0C0E12;
+  font-family: Arial, sans-serif;
+}
+h2{
+  color: #0C0E12;
+  font-family: Arial, sans-serif;
+}
+h3{
+  color: #0C0E12;
+  font-family: Arial, sans-serif;
+}
+h4{
+  color: #0C0E12;
+  font-family: Arial, sans-serif;
+}
+h5{
+  color: #0c0e12;
+  font-family: Arial, sans-serif;
+}
+label{
+  color:#0C0E12;
+  font-family: Arial, sans-serif;
+}
+button:hover{
+  background-color:#FCD535!important;
+}
+a:hover{
+  background-color:#FCD535!important;
+  color:#0C0E12 !important;
+}
+</style>

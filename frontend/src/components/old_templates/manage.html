@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <div class="mdui-dialog" id="createCluster">
+
+    <form method="POST">
+        <div class="mdui-dialog-content">
+            <div class="mdui-dialog-title">Create New Cluster</div>
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">Cluster Name</label>
+                <input class="mdui-textfield-input" type="text" name = "name"/>
+            </div>
+
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">Min Cluster Size</label>
+                <input class="mdui-textfield-input" type="number" name = "size"/>
+            </div>
+
+
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">How many copies 2/3?</label>
+                <input class="mdui-textfield-input" type="number" name = "copy"/>
+            </div>
+
+
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">Virtual Ip</label>
+                <input class="mdui-textfield-input" type="text" name = "ip"/>
+            </div>
+        </div>
+        <div class="mdui-dialog-actions">
+            <button class="mdui-btn mdui-ripple" type="submit">Create Cluster</button>
+        </div>
+    </form>
+
+
+    </div>
+
+
+
+
+    <div>
+        {% for item in cluster %}
+            <button type="button" style="height: 64px; margin-top: 1%; font-size:large;"
+                    class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple"
+                    onclick="{{ 'location.href='+'\'/cluster?id='+item+'\'' }}">Cluster: {{ item }}</button>
+        {% endfor %}
+
+        <button type="button" style="height: 64px; margin-top: 1%; font-size:large;"
+                class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple"
+                mdui-dialog="{target: '#createCluster'}">
+
+            Create Cluster
+        </button>
+    </div>
+
+
+{% endblock %}

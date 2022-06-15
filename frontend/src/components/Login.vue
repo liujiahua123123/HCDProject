@@ -1,0 +1,40 @@
+<template v-if="loggedIn">
+    <div class="mdui-container container" style="padding-top: 20vh;">
+        <div class="mdui-shadow-5 mdui-typo" style="width: 70%; margin-left: 15%;padding: 10px;">
+            <div>
+                <div style="text-align: center">
+                    <img src="../assets/logo.svg" style="height: 10vh; margin-top: 5%">
+                    <h3>HCD Login</h3>
+                </div>
+                <form method="post">
+                <div class="mdui-textfield">
+                    <label class="mdui-textfield-label">Username</label>
+                    <input id="username" name="username" class="mdui-textfield-input" type="username" placeholder="Enter Username"/>
+                </div>
+                <div class="mdui-textfield">
+                    <label class="mdui-textfield-label">Password</label>
+                    <input id="password"  name="password" class="mdui-textfield-input" type="password" placeholder="Enter Password"/>
+                </div>
+                <div class="mdui-row-xs-1">
+                    <div class="mdui-col">
+                        <button id="login-button" type="submit" class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple">
+                            Login
+                        </button>
+                    </div>
+                </div>
+                </form>
+                <div style="width: 100%; margin-top: 10px">
+                    <a class="dummy"></a>
+                    <a style="float: right" href="/sign-up">Go Register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+    name: 'Login', 
+    loggedIn: true
+}
+</script>
