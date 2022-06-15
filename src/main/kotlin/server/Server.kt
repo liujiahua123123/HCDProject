@@ -18,10 +18,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import server.route.clusterRoute
-import server.route.commonRoute
-import server.route.hostRoute
-import server.route.userRoute
+import server.route.*
 import server.trace.Traceable
 import utils.PortalAccessManagement
 import utils.User
@@ -39,6 +36,7 @@ object Server {
                 clusterRoute()
                 hostRoute()
                 commonRoute()
+                diskRoute()
             }
         }.start(wait = true)
     }

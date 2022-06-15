@@ -22,7 +22,8 @@ import kotlin.math.log
  * It also provides the ability to warn Throwable and log Throwable
  * It guarantees cache will be flush to the print stream before runtime shutdown
  */
-class AsyncLogger(val loggerName: String, val output: PrintStream = System.out, private val colorCodeType: LogColorOutputType = LogColorOutputType.LinuxCode
+class AsyncLogger(
+    private val loggerName: String, val output: PrintStream = System.out, private val colorCodeType: LogColorOutputType = LogColorOutputType.LinuxCode
 ) : Pipeline {
     /** Thread safe */
     private val logs = StringBuffer()
