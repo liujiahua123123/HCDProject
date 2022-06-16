@@ -13,20 +13,1033 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="/utils.js"></script>
 
+    <style>
+        @media screen and (min-width: 1201px) {
+            #disk-list {
+                width: 70%;
+                max-width: 70%;
+            }
+
+            #disk-actions {
+                width: 30%;
+                max-width: 30%;
+            }
+
+            #disk-management {
+                display: flex;
+            }
+
+            #disk-actions > .action {
+                margin: 15px;
+                width: calc(100% - 30px);
+            }
+        }
+
+        @media screen and (max-width: 1200px) {
+            #disk-list {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            #disk-actions {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            #disk-management {
+                display: block;
+            }
+
+            .action {
+                margin-bottom: 15px;
+                margin-top: 15px;
+                margin-left: 5%;
+                width: 90%;
+            }
+        }
+
+        .tag-list > i {
+            margin-left: 3px;
+            margin-right: 3px;
+        }
+
+        #disk-management {
+            font-family: monospace;
+        }
+
+    </style>
+
     <script>
+        let hostCollapses = []
+
+        function renderHostCollapse() {
+            hostCollapses = []
+            $(".host-head").each(function () {
+                hostCollapses[hostCollapses.length] = new mdui.Collapse($(this), {});
+            })
+            $(".mdui-btn").click(function (e) {
+                return false
+            })
+        }
+
+
+        function vue() {
+            const onUpdate = function () {
+                console.log("VUE updated")
+                mdui.mutation()
+                renderHostCollapse()
+            }
+
+            const SourceData = {
+                data() {
+                    return {
+                        data: [
+                            {
+                                "clusterId": null,
+                                "hosts": [{
+                                    "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                    "hostName": "hcd48",
+                                    "clusterId": "7c7a1061-7424-4e4b-b985-e1f869ad5c83",
+                                    "state": "ONLINE",
+                                    "disks": [{
+                                        "diskId": "40603dc9-1ec1-4a63-9082-2d8f01ad6a3b",
+                                        "diskNumericalId": 16,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035620000140",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme5n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035620000140",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1631449088,
+                                        "diskFreeSpace": 890915850895,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "03",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "59fe00ad-9470-45ec-8a4c-019da118c7e8",
+                                        "diskNumericalId": 13,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035600122D92",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme2n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D92",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1685962752,
+                                        "diskFreeSpace": 890861337231,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0c",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "85f9bc45-924b-463b-b250-c334e823df68",
+                                        "diskNumericalId": 7,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035600122D82",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme0n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D82",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1658208256,
+                                        "diskFreeSpace": 890889091727,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0b",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "996b0325-8140-4dcf-a595-ef503aa89ff4",
+                                        "diskNumericalId": 10,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035600122D91",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme3n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D91",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1710387200,
+                                        "diskFreeSpace": 890836912783,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "01",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "aea5eb03-4f31-4adc-848c-dfb9e7d93bbe",
+                                        "diskNumericalId": 18,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035620000141",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme4n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035620000141",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1848737792,
+                                        "diskFreeSpace": 890698562191,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "09",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "ce670f72-ad59-49fb-94ec-4f38db73b6e9",
+                                        "diskNumericalId": 17,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035600122D7F",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme1n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D7F",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1845563392,
+                                        "diskFreeSpace": 890701736591,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "04",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }]
+                                }, {
+                                    "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                    "hostName": "hcd47",
+                                    "clusterId": "7c7a1061-7424-4e4b-b985-e1f869ad5c83",
+                                    "state": "ONLINE",
+                                    "disks": [{
+                                        "diskId": "028a2e1a-81c3-4877-94f0-ea6a0f6e077f",
+                                        "diskNumericalId": 4,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/0023035600122D52",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme3n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D52",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1711624192,
+                                        "diskFreeSpace": 890835675791,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "04",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "19710ea4-b7c7-4f28-9b30-53cea4add02a",
+                                        "diskNumericalId": 1,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/0023035600122D9A",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme0n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D9A",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1659273216,
+                                        "diskFreeSpace": 890888026767,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0b",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "19b01ce6-fa51-4007-b09b-fcab2a0b0bfc",
+                                        "diskNumericalId": 9,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/002303562000015D",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme5n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "002303562000015D",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1739563008,
+                                        "diskFreeSpace": 890807736975,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "03",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "c5f63fb9-b2cc-4920-b66a-efda13acd0c4",
+                                        "diskNumericalId": 6,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/0023035600122DA2",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme2n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122DA2",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1685991424,
+                                        "diskFreeSpace": 890861308559,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0c",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "ddb2c467-3cbf-4bf1-9b72-f9abfccf76e7",
+                                        "diskNumericalId": 15,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/002303562000015E",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme4n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "002303562000015E",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1848938496,
+                                        "diskFreeSpace": 890698361487,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "09",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "eac71b25-3a48-4fa9-b9f6-9d9d216cb0d7",
+                                        "diskNumericalId": 12,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/0023035600122D81",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme1n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D81",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1739350016,
+                                        "diskFreeSpace": 890807949967,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "01",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }]
+                                }, {
+                                    "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                    "hostName": "hcd49",
+                                    "clusterId": "7c7a1061-7424-4e4b-b985-e1f869ad5c83",
+                                    "state": "ONLINE",
+                                    "disks": [{
+                                        "diskId": "93014b2f-3acc-4863-9dea-d0baa0002973",
+                                        "diskNumericalId": 11,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035600122D8A",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme1n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D8A",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1847189504,
+                                        "diskFreeSpace": 890700110479,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "04",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "93be0388-f881-4764-a17c-16ed61d66210",
+                                        "diskNumericalId": 14,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035600122DA1",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme4n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122DA1",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1850109952,
+                                        "diskFreeSpace": 890697190031,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0b",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "c66727df-7bad-469a-82c9-2380da381e1c",
+                                        "diskNumericalId": 8,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035620000155",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme5n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035620000155",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1634082816,
+                                        "diskFreeSpace": 890913217167,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "09",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "ed084329-7594-4655-a88e-cd5224762edf",
+                                        "diskNumericalId": 5,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035620000156",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme2n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035620000156",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1688227840,
+                                        "diskFreeSpace": 890859072143,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "03",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "ee020a57-2f42-466b-8b93-9363e7689a4c",
+                                        "diskNumericalId": 2,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035600122D98",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme0n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D98",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1661435904,
+                                        "diskFreeSpace": 890885864079,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "01",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "fe411e8b-a7b1-49e5-ba0f-77dee45866de",
+                                        "diskNumericalId": 3,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035600122D94",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme3n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D94",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1712676864,
+                                        "diskFreeSpace": 890834623119,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0c",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }]
+                                }]
+                            },
+                            {
+                                "clusterId": "7c7a1061-7424-4e4b-b985-e1f869ad5c83",
+                                "hosts": [{
+                                    "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                    "hostName": "hcd48",
+                                    "clusterId": "7c7a1061-7424-4e4b-b985-e1f869ad5c83",
+                                    "state": "ONLINE",
+                                    "disks": [{
+                                        "diskId": "40603dc9-1ec1-4a63-9082-2d8f01ad6a3b",
+                                        "diskNumericalId": 16,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035620000140",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme5n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035620000140",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1631449088,
+                                        "diskFreeSpace": 890915850895,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "03",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "59fe00ad-9470-45ec-8a4c-019da118c7e8",
+                                        "diskNumericalId": 13,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035600122D92",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme2n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D92",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1685962752,
+                                        "diskFreeSpace": 890861337231,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0c",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "85f9bc45-924b-463b-b250-c334e823df68",
+                                        "diskNumericalId": 7,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035600122D82",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme0n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D82",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1658208256,
+                                        "diskFreeSpace": 890889091727,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0b",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "996b0325-8140-4dcf-a595-ef503aa89ff4",
+                                        "diskNumericalId": 10,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035600122D91",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme3n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D91",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1710387200,
+                                        "diskFreeSpace": 890836912783,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "01",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "aea5eb03-4f31-4adc-848c-dfb9e7d93bbe",
+                                        "diskNumericalId": 18,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035620000141",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme4n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035620000141",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1848737792,
+                                        "diskFreeSpace": 890698562191,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "09",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "ce670f72-ad59-49fb-94ec-4f38db73b6e9",
+                                        "diskNumericalId": 17,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45398",
+                                        "mountPoint": "/mnt/0023035600122D7F",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme1n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D7F",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1845563392,
+                                        "diskFreeSpace": 890701736591,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "04",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }]
+                                }, {
+                                    "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                    "hostName": "hcd47",
+                                    "clusterId": "7c7a1061-7424-4e4b-b985-e1f869ad5c83",
+                                    "state": "ONLINE",
+                                    "disks": [{
+                                        "diskId": "028a2e1a-81c3-4877-94f0-ea6a0f6e077f",
+                                        "diskNumericalId": 4,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/0023035600122D52",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme3n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D52",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1711624192,
+                                        "diskFreeSpace": 890835675791,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "04",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "19710ea4-b7c7-4f28-9b30-53cea4add02a",
+                                        "diskNumericalId": 1,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/0023035600122D9A",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme0n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D9A",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1659273216,
+                                        "diskFreeSpace": 890888026767,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0b",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "19b01ce6-fa51-4007-b09b-fcab2a0b0bfc",
+                                        "diskNumericalId": 9,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/002303562000015D",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme5n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "002303562000015D",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1739563008,
+                                        "diskFreeSpace": 890807736975,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "03",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "c5f63fb9-b2cc-4920-b66a-efda13acd0c4",
+                                        "diskNumericalId": 6,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/0023035600122DA2",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme2n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122DA2",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1685991424,
+                                        "diskFreeSpace": 890861308559,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0c",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "ddb2c467-3cbf-4bf1-9b72-f9abfccf76e7",
+                                        "diskNumericalId": 15,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/002303562000015E",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme4n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "002303562000015E",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1848938496,
+                                        "diskFreeSpace": 890698361487,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "09",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "eac71b25-3a48-4fa9-b9f6-9d9d216cb0d7",
+                                        "diskNumericalId": 12,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad45440",
+                                        "mountPoint": "/mnt/0023035600122D81",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme1n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D81",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1739350016,
+                                        "diskFreeSpace": 890807949967,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "01",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }]
+                                }, {
+                                    "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                    "hostName": "hcd49",
+                                    "clusterId": "7c7a1061-7424-4e4b-b985-e1f869ad5c83",
+                                    "state": "ONLINE",
+                                    "disks": [{
+                                        "diskId": "93014b2f-3acc-4863-9dea-d0baa0002973",
+                                        "diskNumericalId": 11,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035600122D8A",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme1n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D8A",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1847189504,
+                                        "diskFreeSpace": 890700110479,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "04",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "93be0388-f881-4764-a17c-16ed61d66210",
+                                        "diskNumericalId": 14,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035600122DA1",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme4n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122DA1",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1850109952,
+                                        "diskFreeSpace": 890697190031,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0b",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "c66727df-7bad-469a-82c9-2380da381e1c",
+                                        "diskNumericalId": 8,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035620000155",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme5n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035620000155",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1634082816,
+                                        "diskFreeSpace": 890913217167,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "09",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "ed084329-7594-4655-a88e-cd5224762edf",
+                                        "diskNumericalId": 5,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035620000156",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme2n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035620000156",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1688227840,
+                                        "diskFreeSpace": 890859072143,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "03",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "ee020a57-2f42-466b-8b93-9363e7689a4c",
+                                        "diskNumericalId": 2,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035600122D98",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme0n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D98",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1661435904,
+                                        "diskFreeSpace": 890885864079,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "01",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }, {
+                                        "diskId": "fe411e8b-a7b1-49e5-ba0f-77dee45866de",
+                                        "diskNumericalId": 3,
+                                        "hostId": "00000000-0000-0000-0000-0cc47ad453c8",
+                                        "mountPoint": "/mnt/0023035600122D94",
+                                        "state": "ONLINE",
+                                        "physicalState": "AVAILABLE",
+                                        "deviceNodeName": "nvme3n1",
+                                        "diskTagList": ["DATA_DISK", "METADATA_DISK"],
+                                        "diskSerialNumber": "0023035600122D94",
+                                        "diskSize": 959728279552,
+                                        "diskUsage": 1712676864,
+                                        "diskFreeSpace": 890834623119,
+                                        "diskUsableSize": 892547299983,
+                                        "downstreamDevice": "0c",
+                                        "pciGroupUpstreamBus": "82",
+                                        "carrierIndex": "0",
+                                        "inVolumeGroup": false
+                                    }]
+                                }]
+                            }
+                        ],
+                        methods: {
+                            update(newData) {
+                                this.data = newData
+                            }
+                        },
+                        updated() {
+                            this.$nextTick(function () {
+                                onUpdate()
+                            })
+                        }
+                    }
+                }
+            }
+
+            app = Vue.createApp(SourceData)
+            app.component('disk', {
+                props: ['disk_info', 'host_id'],
+                template: '#disk-template'
+            })
+            app.component('host', {
+                props: ['host_id', 'host_name', 'disk_data'],
+                template: '#host-template'
+            })
+            app.component('cluster', {
+                props: ['cluster_id', 'hosts'],
+                template: '#cluster-template'
+            })
+            app.mount("#disk-management")
+            onUpdate()
+        }
+
+        function refresh() {
+            document.dataPost("/host/list-by-cluster", {}, function (success, data) {
+
+            })
+        }
 
         $(window).ready(function () {
-            $("#listHost").click(function () {
-                document.dataPost("/list",{},function (success, data) {
-                    console.log(data)
-                })
-            })
+            vue()
+            //refresh()
         })
 
     </script>
 </head>
+
+<template id="cluster-template">
+    <ul class="mdui-list" style="margin-top: 15px">
+        <li class="cluster">
+            <div class="mdui-collapse-item-header mdui-list-item">
+                <i v-if="cluster_id != null" class="mdui-icon material-icons">&#xe2c2;</i>
+                <i v-if="cluster_id == null" class="mdui-icon material-icons">&#xe88b;</i>
+                <div class="mdui-list-item-content" style="margin-left: 5px">
+                    {{ cluster_id == null ? "Free Hosts (hosts not in any cluster)" : "Cluster " + cluster_id }}
+                </div>
+                <i class="mdui-collapse-item-arrow mdui-icon material-icons">format_align_justify</i>
+
+
+                <label v-if="cluster_id != null" class="mdui-checkbox">
+                    <input type="checkbox" name="group1"/>
+                    <i class="mdui-checkbox-icon"></i>
+                </label>
+
+                <label v-if="cluster_id == null" class="mdui-checkbox">
+                    <input type="checkbox" name="group1" disabled/>
+                    <i class="mdui-checkbox-icon"></i>
+                </label>
+
+                <button style="margin-left: 8px" class="mdui-btn mdui-btn-icon mdui-color-theme-accent mdui-btn-dense">
+                    <i class="mdui-icon material-icons">add</i>
+                </button>
+            </div>
+
+            <host v-for="host in hosts"
+                  v-bind:host_id="host.hostId"
+                  v-bind:host_name="host.hostName"
+                  v-bind:disk_data="host.disks">
+            </host>
+        </li>
+    </ul>
+</template>
+<template id="host-template">
+    <ul class="mdui-list host-head" mdui-collapse="{}">
+        <li class="mdui-collapse-item">
+            <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
+                <i class="mdui-icon material-icons">&#xe2c8;</i>
+                <div class="mdui-list-item-content" style="margin-left: 5px">{{ host_id + " (" + host_name + ")" }}
+                </div>
+                <i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
+                <label class="mdui-checkbox" >
+                    <input type="checkbox" name="group1"/>
+                    <i class="mdui-checkbox-icon"></i>
+                </label>
+                <button style="margin-left: 8px" class="mdui-btn mdui-btn-icon mdui-color-theme-accent mdui-btn-dense" onclick="">
+                    <i class="mdui-icon material-icons">add</i>
+                </button>
+            </div>
+            <ul class="mdui-collapse-item-body mdui-list host">
+                <disk v-for="disk_info in disk_data" v-bind:disk_info="disk_info" v-bind:host_id="host_id"></disk>
+            </ul>
+        </li>
+    </ul>
+</template>
+
+<template id="disk-template">
+    <li class="mdui-list-item disk">
+        <i class="mdui-icon material-icons">&#xe53b;</i>
+        <div class="mdui-list-item-content" style="margin-left: 5px">
+            {{ disk_info.diskId }}
+            <span style="margin-left: 10px;margin-right: 10px" class="tag-list">
+                                <i v-if="disk_info.diskTagList.includes('DATA_DISK')"
+                                   class="mdui-icon material-icons"
+                                   mdui-tooltip="{content: 'Data'}">&#xe1af;</i>
+                                <i v-if="!disk_info.diskTagList.includes('DATA_DISK')"
+                                   class="mdui-icon material-icons" style="opacity: 0">&#xe54e;</i>
+
+                                <i v-if="disk_info.diskTagList.includes('METADATA_DISK')"
+                                   class="mdui-icon material-icons"
+                                   mdui-tooltip="{content: 'Meta'}">&#xe54e;</i>
+                                <i v-if="!disk_info.diskTagList.includes('METADATA_DISK')"
+                                   class="mdui-icon material-icons"
+                                   style="opacity: 0">&#xe54e;</i>
+
+                                <i v-if="disk_info.diskTagList.includes('WRITE_CACHE')"
+                                   class="mdui-icon material-icons"
+                                   mdui-tooltip="{content: 'Write'}">&#xe3c9;</i>
+                                <i v-if="!disk_info.diskTagList.includes('WRITE_CACHE')"
+                                   class="mdui-icon material-icons"
+                                   style="opacity: 0">&#xe3c9;</i>
+
+                                <i v-if="disk_info.diskTagList.includes('READ_CACHE')"
+                                   class="mdui-icon material-icons"
+                                   mdui-tooltip="{content: 'Read Cache'}">&#xe417;</i>
+                                <i v-if="!disk_info.diskTagList.includes('READ_CACHE')"
+                                   class="mdui-icon material-icons"
+                                   style="opacity: 0">&#xe417;</i>
+                            </span>
+            <i mdui-tooltip="{content: 'Serial Number'}">{{ disk_info.diskSerialNumber }}</i>
+            <i style="margin-left: 10px" mdui-tooltip="{content: 'Node Name'}">{{ disk_info.deviceNodeName }}</i>
+            <i style="margin-left: 10px" mdui-tooltip="{content: 'Downstream Device'}">{{ disk_info.downstreamDevice
+                }}</i>
+            <i style="margin-left: 10px"
+               mdui-tooltip="{content: 'pciGroup UpstreamBus'}">{{ disk_info.pciGroupUpstreamBus }}</i>
+        </div>
+        <i v-bind:mdui-tooltip="'{content: \'state: ' + disk_info.state + '<br> physical State:'  + disk_info.physicalState + '<br> mount:' + disk_info.mountPoint +'\'}'"
+           class="mdui-icon material-icons">&#xe88e;</i>
+
+        <label class="mdui-checkbox">
+            <input type="checkbox" v-bind:disk_tags="disk_info.diskTagList" v-bind:disk_id="disk_info.diskId"
+                   v-bind:host_id="host_id" class="disk-checkbox"/>
+            <i class="mdui-checkbox-icon"></i>
+        </label>
+    </li>
+</template>
+
+
 <body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
-    <h3>This is portal page</h3>
-    <button id="listHost">LIST HOST</button>
+<div id="disk-management" class="mdui-container-fluid">
+    <div id="disk-list">
+        <cluster v-for="cluster in data" v-bind:cluster_id="cluster.clusterId" v-bind:hosts="cluster.hosts"></cluster>
+    </div>
+
+    <div id="disk-actions">
+        <div class="mdui-typo">
+            <blockquote>
+                <footer>
+                    Disk Operations
+                </footer>
+            </blockquote>
+        </div>
+
+        <ul class="mdui-menu" id="add-tag-menu">
+
+            <li class="mdui-menu-item">
+                <a class="add_tag" tag="DATA_DISK" class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
+                                                                          mdui-tooltip="{content: 'Data'}">&#xe1af;</i>DATA</a>
+            </li>
+            <li class="mdui-menu-item">
+                <a class="add_tag" tag="METADATA_DISK"  class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
+                                                                               mdui-tooltip="{content: 'Data'}">&#xe54e;</i>META</a>
+            </li>
+            <li class="mdui-menu-item">
+                <a class="add_tag" tag="WRITE_CACHE" id="add" class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
+                                                                                     mdui-tooltip="{content: 'Data'}">&#xe3c9;</i>WRITE</a>
+            </li>
+            <li class="mdui-menu-item">
+                <a  class="add_tag" tag="READ_CACHE" class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
+                                                                            mdui-tooltip="{content: 'Data'}">&#xe417;</i>READ</a>
+            </li>
+            <li class="mdui-divider"></li>
+            <li class="mdui-menu-item">
+                <a id="add_tag_data_meta" class="mdui-ripple">
+                    DATA + META
+                </a>
+            </li>
+        </ul>
+
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action"
+                mdui-menu="{target: '#add-tag-menu'}">Add Tag
+        </button>
+
+        <ul class="mdui-menu" id="remove-tag-menu">
+            <li class="mdui-menu-item remove-tag" tag="DATA_DISK">
+                <a class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
+                                          mdui-tooltip="{content: 'Data'}">&#xe1af;</i>DATA</a>
+            </li>
+            <li class="mdui-menu-item remove-tag" tag="METADATA_DISK">
+                <a class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
+                                          mdui-tooltip="{content: 'Data'}">&#xe54e;</i>META</a>
+            </li>
+            <li class="mdui-menu-item remove-tag"  tag="WRITE_CACHE">
+                <a class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
+                                          mdui-tooltip="{content: 'Data'}">&#xe3c9;</i>WRITE</a>
+            </li>
+            <li class="mdui-menu-item remove-tag" tag="READ_CACHE">
+                <a class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
+                                          mdui-tooltip="{content: 'Data'}">&#xe417;</i>READ</a>
+            </li>
+        </ul>
+
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action"
+                mdui-menu="{target: '#remove-tag-menu'}">Remove Tag
+        </button>
+
+        <div class="mdui-typo">
+            <blockquote>
+                <footer>
+                    Host Operation
+                </footer>
+            </blockquote>
+        </div>
+
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Join To Cluster</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Create Cluster With Selected Host</button>
+
+        <div class="mdui-typo">
+            <blockquote>
+                <footer>
+                    Cluster Operation
+                </footer>
+            </blockquote>
+        </div>
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Save Cluster To Template</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action">CLEAN</button>
+        <div class="mdui-typo">
+            <blockquote>
+                <footer>
+                    Global Operation
+                </footer>
+            </blockquote>
+        </div>
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Create Cluster From Template</button>
+    </div>
+</div>
+
 </body>
 </html>

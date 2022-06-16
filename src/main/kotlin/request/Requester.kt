@@ -44,7 +44,7 @@ interface Pipeline {
     suspend fun onThrowable(request: Requester, throwable: Throwable) {}
 }
 
-class Requester() {
+class Requester{
     enum class Method(val ktorMethod: HttpMethod) {
         GET(HttpMethod.Get),
         POST(HttpMethod.Post),

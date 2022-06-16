@@ -24,6 +24,7 @@ fun Routing.commonRoute(){
         }
     }
 
+
 }
 
 @kotlinx.serialization.Serializable

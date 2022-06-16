@@ -7,7 +7,7 @@ import server.ifLogin
 import utils.PortalAccessManagement
 import utils.STATIC_FILES
 
-fun Route.clusterRoute(){
+fun Routing.clusterRoute(){
     get("/portal/{portal}") {
         ifLogin {
             if (call.parameters.contains("portal")) {
