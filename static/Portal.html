@@ -72,6 +72,41 @@
     <script>
         let hostCollapses = []
 
+        function all_selected_disk() {
+            let list = []
+            $(".disk-checkbox").each(function () {
+                if ($(this).prop("checked")) {
+                    list[list.length] = {
+                        "diskId": $(this).attr("disk_id"),
+                        "hostId": $(this).attr("host_id")
+                    }
+                }
+            })
+            return list
+        }
+
+        function all_selected_host() {
+            let list = []
+            $(".host-checkbox").each(function () {
+                if ($(this).prop("checked")) {
+                    list[list.length] = $(this).attr("host_id")
+                }
+            })
+            return list
+        }
+
+        function all_selected_cluster(){
+            let list = []
+            $(".cluster-checkbox").each(function () {
+                if ($(this).prop("checked")) {
+                    list[list.length] = $(this).attr("cluster_id")
+                }
+            })
+            return list
+        }
+
+
+
         function renderHostCollapse() {
             hostCollapses = []
             $(".host-head").each(function () {
@@ -79,6 +114,37 @@
             })
             $(".mdui-btn").click(function (e) {
                 return false
+            })
+            function onCheckboxUpdate(){
+                $(".disk-action").prop("disabled", all_selected_disk().length === 0)
+                $(".host-action").prop("disabled", all_selected_host().length === 0)
+                $(".cluster-action").prop("disabled", all_selected_cluster().length === 0)
+            }
+            $('input:checkbox').change(onCheckboxUpdate)
+            function onQuickSelectDisks(){
+                if($(this).find("i").html() === "add"){
+                    $(this).find("i").html("remove")
+                    $(this).parent().parent().find(".disk-checkbox").prop("checked", true)
+                }else{
+                    $(this).find("i").html("add")
+                    $(this).parent().parent().find(".disk-checkbox").prop("checked", false)
+                }
+                onCheckboxUpdate()
+            }
+            $(".host-select-all-disk").click(onQuickSelectDisks)
+            $(".cluster-select-all-disk").click(onQuickSelectDisks)
+            $(".open-all-host").click(function () {
+                if($(this).attr("open")) {
+                    $(this).parent().parent().find(".host-head").each(function () {
+                        $(this).find(".mdui-collapse-item").removeClass("mdui-collapse-item-open")
+                    })
+                    $(this).attr("open",false)
+                }else{
+                    $(this).parent().parent().find(".host-head").each(function () {
+                        $(this).find(".mdui-collapse-item").addClass("mdui-collapse-item-open")
+                    })
+                    $(this).attr("open",true)
+                }
             })
         }
 
@@ -841,11 +907,11 @@
                 <div class="mdui-list-item-content" style="margin-left: 5px">
                     {{ cluster_id == null ? "Free Hosts (hosts not in any cluster)" : "Cluster " + cluster_id }}
                 </div>
-                <i class="mdui-collapse-item-arrow mdui-icon material-icons">format_align_justify</i>
+                <i class="mdui-collapse-item-arrow mdui-icon material-icons open-all-host">format_align_justify</i>
 
 
                 <label v-if="cluster_id != null" class="mdui-checkbox">
-                    <input type="checkbox" name="group1"/>
+                    <input class="cluster-checkbox" v-bind:cluster_id="cluster_id" type="checkbox" name="group1"/>
                     <i class="mdui-checkbox-icon"></i>
                 </label>
 
@@ -854,7 +920,7 @@
                     <i class="mdui-checkbox-icon"></i>
                 </label>
 
-                <button style="margin-left: 8px" class="mdui-btn mdui-btn-icon mdui-color-theme-accent mdui-btn-dense">
+                <button style="margin-left: 8px" class="mdui-btn mdui-btn-icon mdui-color-theme-accent mdui-btn-dense cluster-select-all-disk">
                     <i class="mdui-icon material-icons">add</i>
                 </button>
             </div>
@@ -875,11 +941,11 @@
                 <div class="mdui-list-item-content" style="margin-left: 5px">{{ host_id + " (" + host_name + ")" }}
                 </div>
                 <i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
-                <label class="mdui-checkbox" >
-                    <input type="checkbox" name="group1"/>
+                <label class="mdui-checkbox " >
+                    <input class="host-checkbox" v-bind:host_id="host_id" type="checkbox" name="group1"/>
                     <i class="mdui-checkbox-icon"></i>
                 </label>
-                <button style="margin-left: 8px" class="mdui-btn mdui-btn-icon mdui-color-theme-accent mdui-btn-dense" onclick="">
+                <button style="margin-left: 8px" class="mdui-btn mdui-btn-icon mdui-color-theme-accent mdui-btn-dense host-select-all-disk" >
                     <i class="mdui-icon material-icons">add</i>
                 </button>
             </div>
@@ -952,7 +1018,7 @@
         <div class="mdui-typo">
             <blockquote>
                 <footer>
-                    Disk Operations
+                    Disk Operation
                 </footer>
             </blockquote>
         </div>
@@ -983,7 +1049,7 @@
             </li>
         </ul>
 
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action"
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action disk-action" disabled
                 mdui-menu="{target: '#add-tag-menu'}">Add Tag
         </button>
 
@@ -1006,7 +1072,7 @@
             </li>
         </ul>
 
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action"
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action disk-action" disabled
                 mdui-menu="{target: '#remove-tag-menu'}">Remove Tag
         </button>
 
@@ -1018,8 +1084,8 @@
             </blockquote>
         </div>
 
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Join To Cluster</button>
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Create Cluster With Selected Host</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action" disabled>Join To Cluster</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action" disabled>Create Cluster With Selected Host</button>
 
         <div class="mdui-typo">
             <blockquote>
@@ -1028,8 +1094,8 @@
                 </footer>
             </blockquote>
         </div>
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Save Cluster To Template</button>
-        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action">CLEAN</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action cluster-action" disabled>Save Cluster To Template</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action cluster-action" disabled>CLEAN</button>
         <div class="mdui-typo">
             <blockquote>
                 <footer>
