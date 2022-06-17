@@ -52,6 +52,44 @@
 </head>
 <body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
 
+
+<div class="mdui-toolbar mdui-color-theme">
+    <span style="height: 100%">
+        <img src="../static/logo.svg" style="height: 85%;margin-top: 7.5%">
+    </span>
+    <span class="mdui-typo-title"> Cluster Management </span>
+    <div class="mdui-toolbar-spacer"></div>
+    <div>
+        <button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: 'Home Page'}" onclick="window.location.href = '/'">
+            <i class="mdui-icon material-icons">&#xe88a;</i>
+        </button>
+    </div>
+    <div>
+        <ul class="mdui-menu" id="menu">
+            <li class="mdui-menu-item">
+                <a href="javascript:;" class="mdui-ripple">
+                    <i class="mdui-menu-item-icon mdui-icon material-icons">&#xe8b8;</i>Preferences
+                </a>
+            </li>
+            <li class="mdui-menu-item">
+                <a href="javascript:;" class="mdui-ripple">
+                    <i class="mdui-menu-item-icon mdui-icon material-icons">&#xe869;</i>Advanced
+                </a>
+            </li>
+            <li class="mdui-divider"></li>
+            <li class="mdui-menu-item">
+                <a href="javascript:;" class="mdui-ripple">
+                    <i class="mdui-menu-item-icon"></i>Sign Out
+                </a>
+            </li>
+        </ul>
+        <button id="open_MENU" class="mdui-btn mdui-btn-icon" mdui-menu="{target: '#menu'}">
+            <i class="mdui-icon material-icons">&#xe7fd;</i>
+        </button>
+    </div>
+</div>
+
+
 <div class="mdui-container " style="padding-top: 20vh;">
     <div class="mdui-shadow-5 mdui-typo" style="width: 70%; margin-left: 15%;padding: 10px 10px 14px;">
         <div>
