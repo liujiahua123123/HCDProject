@@ -1,13 +1,14 @@
 package operation.disk
 
+import kotlinx.serialization.Transient
 import operation.AuthedHttpOperation
 import operation.request.Requester
 
 @kotlinx.serialization.Serializable
 data class DiskRemoveTagReq(
-    val hostId: String,
-    val diskIds: List<String>,
-    val diskTag: String
+    @Transient val hostId: String = "",
+    @Transient val diskIds: List<String> = emptyList(),
+    @Transient val diskTag: String = ""
 )
 
 @kotlinx.serialization.Serializable
@@ -16,8 +17,14 @@ class DiskRemoveTagResp(
 )
 
 class DiskRemoveTagOperation: AuthedHttpOperation<DiskRemoveTagReq, DiskRemoveTagResp>(
-    method = Requester.Method.POST,
+    method = Requester.Method.DELETE,
     path = "/v1/disks/tag/auto-disable"
 ){
-    override suspend fun invoke(input: DiskRemoveTagReq): DiskRemoveTagResp = getRequester().send(input).parse()
+    override suspend fun invoke(input: DiskRemoveTagReq): DiskRemoveTagResp{
+        return getRequester().apply {
+            addPathParameter(input.hostId)
+            addPathParameter(input.diskIds.joinToString(","))
+            addPathParameter(input.diskTag)
+        }.send(input).parse()
+    }
 }

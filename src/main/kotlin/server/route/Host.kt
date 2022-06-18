@@ -43,7 +43,7 @@ fun Routing.hostRoute() {
         ifFromPortalPage { _, portal ->
             call.respondTraceable(OperationExecutor.addExecutorTask<List<ClusterWithHosts>>(numOfStep = 2) {
                 httpOperationScope(portal) {
-                    updateProgress("Listing Hosts")
+                    updateProgress(0,1,"Listing Hosts")
 
                     val result = Collections.synchronizedList(mutableListOf<ClusterWithHosts>())
                     val hosts = create<ListHostOperation>().invoke(ListHostReq(clusterId = null, onlyFreeHosts = false)).data

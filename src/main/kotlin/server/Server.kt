@@ -1,7 +1,6 @@
 package server
 
 import PORT
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -14,6 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.html.currentTimeMillis
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -24,7 +24,6 @@ import utils.PortalAccessManagement
 import utils.User
 import utils.UserManager
 import utils.akamaiHash
-import java.util.ServiceConfigurationError
 import kotlin.math.abs
 
 object Server {
@@ -76,21 +75,29 @@ class UserInputError(message: String) : Exception(message)
 
 @kotlin.jvm.Throws(UserInputError::class)
 fun userInputError(message: Any, supp: Throwable? = null): Nothing = throw UserInputError(message.toString()).apply {
-    if(supp != null){
+    if (supp != null) {
         addSuppressed(supp)
     }
 }
 
-suspend inline fun <reified T> ApplicationCall.respondData(response: ServerResponse<T>) {
+/**
+ * Respond ServerResponse<T> to front-end
+ */
+suspend inline fun <reified T> ApplicationCall.respondData(response: ServerResponse<T>) =
+    respondData(kotlinx.serialization.serializer(), response)
+
+
+suspend fun <T> ApplicationCall.respondData(serializer: KSerializer<ServerResponse<T>>, response: ServerResponse<T>) {
     try {
-        this.response.headers.append("Content-type","application/json; charset=UTF-8",false)
-        this.respond(ServerJson.encodeToString(response))
-    }catch (e: Throwable){
+        this.response.headers.append("Content-type", "application/json; charset=UTF-8", false)
+        this.respond(ServerJson.encodeToString(serializer, response))
+    } catch (e: Throwable) {
         //ktor will omit Throwable
         e.printStackTrace()
         throw e
     }
 }
+
 
 /**
  * Respond to front end that some Exception/Error occurred during the process
@@ -98,11 +105,15 @@ suspend inline fun <reified T> ApplicationCall.respondData(response: ServerRespo
  */
 suspend fun ApplicationCall.respondThrowable(e: Throwable) {
     val errorMessage = if (e is UserInputError) {
-        e.message!!
+        e.message!!.replace("\n", "</br>")
     } else {
-        ("<h3>Encounter " + e.javaClass.simpleName) + "</h3>" + e.message.run { if(this != null){
-            "$this</br>"
-        }else{""} } + "</br>Exception Stacktrace:</br>" + e.stackTrace.joinToString("</br>")
+        ("<h3>Encounter " + e.javaClass.simpleName) + "</h3>" + e.message.run {
+            if (this != null) {
+                "$this</br>"
+            } else {
+                ""
+            }
+        } + "</br>Exception Stacktrace:</br>" + e.stackTrace.joinToString("</br>")
     }
 
     this.respondData(
@@ -145,7 +156,11 @@ suspend inline fun <reified T : Any> ApplicationCall.respondOK(data: T) {
 }
 
 
-suspend inline fun ApplicationCall.respondTraceable(traceable: Traceable) {
+/**
+ * Respond Traceable Result to front-end
+ * Automated encodes to result/failure/waiting instructions
+ */
+suspend fun <T> ApplicationCall.respondTraceable(traceable: Traceable<T>) {
     when (traceable.state) {
         Traceable.State.SCHEDULING ->
             this.respondData(
@@ -157,8 +172,15 @@ suspend inline fun ApplicationCall.respondTraceable(traceable: Traceable) {
                 )
             )
         Traceable.State.COMPUTED -> {
-            this.response.headers.append("Content-type", "application/json; charset=UTF-8", false)
-            this.respond(traceable.getResponse())
+            val r = traceable.getResult()
+            this.respondData(
+                r.serialization, ServerResponse(
+                    success = true,
+                    errorMessage = "",
+                    isTracingTask = false,
+                    data = r.result!!
+                )
+            )
         }
         Traceable.State.THROWN ->
             this.respondThrowable(traceable.getFailureReason())
@@ -171,7 +193,7 @@ fun Routing.handleDataPost(path: String, receiver: suspend PipelineContext<Unit,
         try {
             this.receiver()
         } catch (e: Throwable) {
-            if(e !is UserInputError) {
+            if (e !is UserInputError) {
                 e.printStackTrace()
             }
             call.respondThrowable(e)
@@ -180,11 +202,11 @@ fun Routing.handleDataPost(path: String, receiver: suspend PipelineContext<Unit,
 }
 
 suspend inline fun <reified T : Any> ApplicationCall.readDataRequest(): T {
-    val text = withContext(Dispatchers.IO){
+    val text = withContext(Dispatchers.IO) {
         String(receiveStream().readBytes(), Charsets.UTF_8)
     }
 
-    val header = request.header("check-sum")?: userInputError("Missing check-sum header")
+    val header = request.header("check-sum") ?: userInputError("Missing check-sum header")
 
     val req: ServerRequest<T> = try {
         ServerJson.decodeFromString(text)
@@ -220,7 +242,7 @@ object RequestShield {
         if (abs(current - request) > timeDelay) {
             userInputError("request expired")
         }
-        if(rawText.akamaiHash() != header){
+        if (rawText.akamaiHash() != header) {
             userInputError("modified request")
         }
 
@@ -266,9 +288,10 @@ suspend fun PipelineContext<Unit, ApplicationCall>.ifLogin(block: suspend Pipeli
 
 suspend fun PipelineContext<Unit, ApplicationCall>.ifFromPortalPage(block: suspend PipelineContext<Unit, ApplicationCall>.(user: User, portal: String) -> Unit) {
     ifLogin { user ->
-        val referer = call.request.header("referer")?: userInputError("Missing referer header")
-        val portal = referer.split("/").reversed().firstOrNull { it.contains(".") } ?: userInputError("Failed to find host info in referer header $referer")
-        if(!PortalAccessManagement.canAccess(user,portal)){
+        val referer = call.request.header("referer") ?: userInputError("Missing referer header")
+        val portal = referer.split("/").reversed().firstOrNull { it.contains(".") }
+            ?: userInputError("Failed to find host info in referer header $referer")
+        if (!PortalAccessManagement.canAccess(user, portal)) {
             userInputError("You are not allowed to access portal: $portal, please back to main page")
         }
         block(this, user, portal)

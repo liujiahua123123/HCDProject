@@ -79,7 +79,7 @@ class Requester{
     fun addPipeline(pipeline: Pipeline) = pipelines.add(pipeline)
 
     suspend inline fun <reified T : Any> send(data: T): Response {
-        if (this.method == Method.GET || this.method == Method.FORM_POST) {
+        if (this.method == Method.GET || this.method == Method.FORM_POST || this.method == Method.DELETE) {
             return sendImpl(data.asMap())
         } else {
             return sendImpl(data)

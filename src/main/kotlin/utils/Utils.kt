@@ -1,14 +1,16 @@
 package utils
 
 import kotlinx.serialization.*
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
+import operation.disk.DiskRemoveTagReq
 import java.io.File
 import java.security.MessageDigest
 import kotlin.reflect.full.memberProperties
 
 
 inline fun <reified T : Any> T.asMap() : Map<String, Any?> {
-    val props = T::class.memberProperties.associateBy { it.name }
+    val props = T::class.memberProperties.filter { !it.annotations.contains(Transient()) }.associateBy { it.name }
     return props.keys.associateWith { (props[it]?.get(this)) }
 }
 

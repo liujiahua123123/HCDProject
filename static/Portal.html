@@ -229,11 +229,45 @@
             }
         }
 
+        function eventListener(){
+            let ignoreUnqualifiedPairs = $("#ignoreUnqualifiedPairs")
+            let traceUntilComplete = $("#traceUntilComplete")
+            function add_tag(tags){
+                document.dataPost("/disk/addtag",{
+                    tags: tags,
+                    disks: all_selected_disk(),
+                    ignoreUnqualifiedPairs: ignoreUnqualifiedPairs.prop("checked"),
+                    traceUntilComplete: traceUntilComplete.prop("checked")
+                },refresh)
+            }
+            function remove_tag(tags){
+                document.dataPost("/disk/removetag",{
+                    tags: tags,
+                    disks: all_selected_disk(),
+                    ignoreUnqualifiedPairs: ignoreUnqualifiedPairs.prop("checked"),
+                    traceUntilComplete: traceUntilComplete.prop("checked")
+                },refresh)
+            }
+
+            $(".add_tag").click(function () {
+                add_tag([$(this).attr("tag")])
+            })
+            $("#add_tag_data_meta").click(function () {
+                add_tag(["DATA_DISK","METADATA_DISK"])
+            })
+            $(".remove_tag").click(function () {
+                remove_tag([$(this).attr("tag")])
+            })
+            $("#remove_tag_all").click(function (){
+                remove_tag(["DATA_DISK","METADATA_DISK","WRITE_CACHE","READ_CACHE"])
+            })
+        }
+
         $(window).ready(function () {
             vue()
+            eventListener()
             refresh()
         })
-
 
     </script>
 </head>
@@ -415,27 +449,47 @@
         </button>
 
         <ul class="mdui-menu" id="remove-tag-menu">
-            <li class="mdui-menu-item remove-tag" tag="DATA_DISK">
+            <li class="mdui-menu-item remove_tag" tag="DATA_DISK">
                 <a class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
                                           mdui-tooltip="{content: 'Data'}">&#xe1af;</i>DATA</a>
             </li>
-            <li class="mdui-menu-item remove-tag" tag="METADATA_DISK">
+            <li class="mdui-menu-item remove_tag" tag="METADATA_DISK">
                 <a class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
                                           mdui-tooltip="{content: 'Data'}">&#xe54e;</i>META</a>
             </li>
-            <li class="mdui-menu-item remove-tag" tag="WRITE_CACHE">
+            <li class="mdui-menu-item remove_tag" tag="WRITE_CACHE">
                 <a class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
                                           mdui-tooltip="{content: 'Data'}">&#xe3c9;</i>WRITE</a>
             </li>
-            <li class="mdui-menu-item remove-tag" tag="READ_CACHE">
+            <li class="mdui-menu-item remove_tag" tag="READ_CACHE">
                 <a class="mdui-ripple"><i class="mdui-icon material-icons mdui-menu-item-icon"
                                           mdui-tooltip="{content: 'Data'}">&#xe417;</i>READ</a>
+            </li>
+            <li class="mdui-divider"></li>
+            <li class="mdui-menu-item">
+                <a id="remove_tag_all" class="mdui-ripple">
+                    ALL
+                </a>
             </li>
         </ul>
 
         <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action disk-action" disabled
                 mdui-menu="{target: '#remove-tag-menu'}">Remove Tag
         </button>
+
+
+        <div class="action" style="">
+            <label class="mdui-checkbox">
+                <input type="checkbox" id="ignoreUnqualifiedPairs"/>
+                <i class="mdui-checkbox-icon"></i>
+                Ignore Unqualified Disk/Tag Pair
+            </label></br>
+            <label class="mdui-checkbox" >
+                <input type="checkbox" id="traceUntilComplete" checked />
+                <i class="mdui-checkbox-icon"></i>
+                Suspend Until Complete
+            </label>
+        </div>
 
         <div class="mdui-typo">
             <blockquote>

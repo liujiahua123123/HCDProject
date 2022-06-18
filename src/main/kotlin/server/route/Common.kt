@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import server.*
+import utils.Job
 import utils.OperationExecutor
 import utils.STATIC_FILES
 
@@ -19,7 +20,7 @@ fun Routing.commonRoute(){
     handleDataPost("/trace"){
         ifLogin {
             val data = call.readDataRequest<TraceRequest>()
-            val job = OperationExecutor.get(data.traceId)?: userInputError("Job not found")
+            val job: Job<*> = OperationExecutor.get(data.traceId)?: userInputError("Task Id Not Found")
             call.respondTraceable(job)
         }
     }

@@ -1,52 +1,56 @@
 package utils
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.GlobalScope.coroutineContext
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.encodeToString
-import operation.Operation
-import server.ServerJson
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.serializer
 import server.ServerResponse
+import server.trace.ResultHolder
 import server.trace.Traceable
 import server.trace.TracingData
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.coroutines.CoroutineContext
-
 
 object OperationExecutor {
+    private val scope = CoroutineScope(kotlinx.coroutines.Job())
 
-    val scope = CoroutineScope(kotlinx.coroutines.Job())
-    val map = ConcurrentHashMap<String, Job<*>>()
+    private val map = ConcurrentHashMap<String, Job<*>>()
 
-    suspend inline fun <reified T : Any> addExecutorTask(numOfStep: Int, crossinline workflow: suspend Job<T>.() -> T):Traceable {
-        val job = Job<T>(numOfStep)
+    inline fun <reified T : Any> serverResponseSerializer(): KSerializer<ServerResponse<T>> = serializer()
+
+    suspend inline fun <reified T : Any> addExecutorTask(
+        numOfStep: Int,
+        noinline workflow: suspend Job<T>.() -> T
+    ): Traceable<T> = addExecutorTask(serverResponseSerializer(), numOfStep, workflow)
+
+    suspend fun <T : Any> addExecutorTask(
+        serializer: KSerializer<ServerResponse<T>>,
+        numOfStep: Int,
+        workflow: suspend Job<T>.() -> T
+    ): Traceable<T> {
+        val job = Job(numOfStep, ResultHolder(null, serializer))
         map[job.id] = job
         scope.launch {
             val result = kotlin.runCatching {
                 workflow.invoke(job)
             }
             result.fold(onFailure = {
-                job.state = Traceable.State.THROWN
                 job.exceptionHolder = it
+                job.state = Traceable.State.THROWN
             }, onSuccess = {
-                println(it)
-                job.state = Traceable.State.COMPUTED
                 /** Type Erase */
-                job.resultHolder = ServerJson.encodeToString(ServerResponse(
-                    success = true, errorMessage = "",isTracingTask = false, data = it
-                ))
+                job.holder.result = it
+                job.state = Traceable.State.COMPUTED
             })
         }
         return job
     }
 
 
-    fun get(id: String):Job<*>?{
+    fun get(id: String): Job<*>? {
         return map[id].apply {
-            if(this != null && this.state != Traceable.State.SCHEDULING){
+            if (this != null && this.state != Traceable.State.SCHEDULING) {
                 map.remove(id)
             }
         }
@@ -54,20 +58,18 @@ object OperationExecutor {
 }
 
 
-class Job<T : Any>(var totalStep: Int) : Traceable{
+class Job<T>(var totalStep: Int, val holder: ResultHolder<T>) : Traceable<T> {
     override val id: String = createUuid4()
 
     override var state: Traceable.State = Traceable.State.SCHEDULING
 
-    var resultHolder: String? = null
     var exceptionHolder: Throwable? = null
 
-
-    private var currStep: Int = 1
+    private var currStep: Int = 0
     private var currStepName: String = "initiating"
     private val mutex = Mutex()
 
-    suspend fun updateProgress(currStep: Int, totalStep: Int, name: String){
+    suspend fun updateProgress(currStep: Int, totalStep: Int, name: String) {
         mutex.withLock {
             this.currStep = currStep
             this.totalStep = totalStep
@@ -77,12 +79,12 @@ class Job<T : Any>(var totalStep: Int) : Traceable{
 
     suspend fun updateProgress(name: String) = updateProgress(currStep + 1, totalStep, name)
 
-    override fun getResponse(): String {
-        return resultHolder!!
+    override fun getResult(): ResultHolder<T> {
+        return holder
     }
 
     override fun getFailureReason(): Throwable {
-        return exceptionHolder!!
+        return exceptionHolder ?: error("Job Failure is unavailable")
     }
 
     override fun toTracingData(): TracingData {
@@ -90,5 +92,4 @@ class Job<T : Any>(var totalStep: Int) : Traceable{
             this.id, this.totalStep, this.currStep, this.currStepName
         )
     }
-
 }

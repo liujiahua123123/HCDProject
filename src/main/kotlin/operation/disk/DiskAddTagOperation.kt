@@ -12,7 +12,9 @@ data class DiskAddTagReq(
 )
 
 @kotlinx.serialization.Serializable
-class DiskAddTagResp()
+class DiskAddTagResp(
+    val taskId: String
+)
 
 class DiskAddTagOperation:AuthedHttpOperation<DiskAddTagReq,DiskAddTagResp>(
     method = Requester.Method.POST,
