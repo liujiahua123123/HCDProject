@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Volume</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.30/vue.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"
+          crossorigin="anonymous"/>
+    <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="utils.js"></script>
+
+    <style>
+        @media screen and (min-width: 1201px) {
+            #volume-list {
+                width: 70%;
+                max-width: 70%;
+            }
+
+            #volume-management {
+                display: flex;
+            }
+        }
+
+        @media screen and (max-width: 1200px) {
+
+            #volume-management {
+                display: block;
+            }
+
+            .action {
+                margin-bottom: 15px;
+                margin-top: 15px;
+                margin-left: 5%;
+                width: 90%;
+            }
+        }
+
+        #volume-management {
+            font-family: monospace;
+        }
+
+    </style>
+
+    <script>
+        let vm
+        function all_selected_cluster() {
+            let list = []
+            $(".cluster-checkbox").each(function () {
+                if ($(this).prop("checked")) {
+                    list[list.length] = $(this).attr("cluster_id")
+                }
+            })
+            return list
+        }
+
+        function vue() {
+            const onUpdate = function () {
+                console.log("VUE updated")
+                mdui.mutation()
+            }
+
+            const SourceData = {
+                data() {
+                    return {
+                        // SAMPLE TEST DATA
+                        data: [{cluster_id: 'CLUSTER 1', volumes: [
+                            { volume_id: '1', volume_name: 'volume1', storage: '1TB'}, 
+                            { volume_id: '2', volume_name: 'volume2', storage: '50GB'}, 
+                            { volume_id: '3', volume_name: 'volume3', storage: '1POTAT'}
+                        ]}, 
+                        {cluster_id: 'CLUSTER 2', volumes: [
+                            { volume_id: '4', volume_name: 'volume4', storage: '512GB'}, 
+                            { volume_id: '5', volume_name: 'volume5', storage: '25GB'}, 
+                            { volume_id: '6', volume_name: 'volume6', storage: 'HALF A POTAT'}
+                        ]}
+                        ],
+                        // data: []
+                    }
+                },
+                methods: {
+                    updateData(newData) {
+                        this.data = newData
+                    }
+                },
+                updated() {
+                    this.$nextTick(function () {
+                        onUpdate()
+                    })
+                }
+            }
+
+            app = Vue.createApp(SourceData)
+            app.component('volume', {
+                props: ['volume_id', 'volume_name', 'storage'],
+                template: '#volume-template'
+            })
+            app.component('cluster', {
+                props: ['cluster_id', 'volumes'],
+                template: '#cluster-template'
+            })
+            vm = app.mount("#volume-management")
+            onUpdate()
+        }
+
+        $(window).ready(function () {
+            vue()
+        })
+
+    </script>
+</head>
+
+<template id="cluster-template">
+    <ul class="mdui-list" style="margin-top: 15px">
+        <li class="cluster">
+            <div class="mdui-collapse-item-header mdui-list-item">
+                <i v-if="cluster_id != null" class="mdui-icon material-icons">&#xe2c2;</i>
+                <i v-if="cluster_id == null" class="mdui-icon material-icons">&#xe88b;</i>
+                <div class="mdui-list-item-content" style="margin-left: 5px">
+                    {{ cluster_id }}
+                </div>
+
+            </div>
+
+            <volume v-for="volume in volumes"
+                  v-bind:volume_id="volume.volume_id"
+                  v-bind:volume_name="volume.volume_name"
+                  v-bind:storage="volume.storage">
+            </volume>
+        </li>
+    </ul>
+</template>
+
+<template id="volume-template">
+    <li class="mdui-list-item volume">
+        <i class="mdui-icon material-icons">&#xe1db;</i>
+        <div class="mdui-list-item-content" style="margin-left: 10px">
+            {{ volume_name }} 
+        </div>
+        <i style="margin-left: 10px" mdui-tooltip="{content: 'Storage'}">{{ storage }}</i>
+    </li>
+</template>
+
+
+<body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
+
+<div class="mdui-toolbar mdui-color-theme">
+    <span style="height: 100%">
+        <img src="logo.svg" style="height: 85%;margin-top: 7.5%">
+    </span>
+    <span class="mdui-typo-title"><b id="portal_ip"></b></span>
+    <div class="mdui-toolbar-spacer"></div>
+    <div>
+        <button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: 'Home'}" onclick="window.open('/')">
+            <i class="mdui-icon material-icons">&#xe88a;</i>
+        </button>
+    </div>
+</div>
+
+
+<div id="volume-management" class="mdui-container-fluid">
+    <div id="volume-list">
+        <cluster v-for="cluster in data" v-bind:cluster_id="cluster.cluster_id" v-bind:volumes="cluster.volumes"></cluster>
+    </div>
+
+
+</div>
+
+</body>
+</html>
