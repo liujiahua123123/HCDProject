@@ -15,6 +15,7 @@ data class TraceTaskResp(
     val taskName: String,
     val statusName: String? = null,
     val resourceId: String? = null,
+    val errorInfo: Map<String, String>? = null
 )
 
 class TraceTaskOperation: AuthedHttpOperation<TraceTaskReq, TraceTaskResp>(
@@ -24,6 +25,12 @@ class TraceTaskOperation: AuthedHttpOperation<TraceTaskReq, TraceTaskResp>(
     override suspend fun invoke(input: TraceTaskReq): TraceTaskResp {
         return getRequester().apply {
             this.addPathParameter(input.taskId)
-        }.send(input).parse()
+        }.send(input).parse<TraceTaskResp>().apply {
+            if(this.statusName == "failed"){
+                throw TaskFailedException("Task failed $this")
+            }
+        }
     }
 }
+
+class TaskFailedException(override val message: String): Exception()

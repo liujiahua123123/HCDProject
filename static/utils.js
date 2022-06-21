@@ -110,17 +110,20 @@
                     }
 
                     if(res.isTracingTask){
-                        generalIndicator.hide()
-                        progressIndicator.show()
-
-                        let percentage = res.data.currStep / (res.data.totalStep + 1)
-                        if(percentage > 1){
-                            percentage = 1
+                        if(res.data.totalStep === 0){
+                            progressIndicator.hide()
+                            generalIndicator.show()
+                        }else {
+                            progressIndicator.show()
+                            generalIndicator.hide()
+                            let percentage = res.data.currStep / (res.data.totalStep)
+                            if (percentage > 1) {
+                                percentage = 1
+                            }
+                            let width = "" + percentage * 100 + "%"
+                            progressBar.css("width", width)
+                            stepName.text("" + res.data.currStep + "/" + (res.data.totalStep) + " " + res.data.currStepName)
                         }
-                        let width = "" + percentage * 100 + "%"
-                        progressBar.css("width",width)
-                        stepName.text("" + res.data.currStep + "/" +  (res.data.totalStep + 1) + " " + res.data.currStepName)
-
                         setTimeout(function () {
                             doc.dataPost("/trace",{"traceId": res.data.traceId},callback)
                         },444)

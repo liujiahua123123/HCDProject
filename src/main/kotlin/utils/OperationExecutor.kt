@@ -20,16 +20,14 @@ object OperationExecutor {
     inline fun <reified T : Any> serverResponseSerializer(): KSerializer<ServerResponse<T>> = serializer()
 
     suspend inline fun <reified T : Any> addExecutorTask(
-        numOfStep: Int,
         noinline workflow: suspend Job<T>.() -> T
-    ): Traceable<T> = addExecutorTask(serverResponseSerializer(), numOfStep, workflow)
+    ): Traceable<T> = addExecutorTask(serverResponseSerializer(), workflow)
 
     suspend fun <T : Any> addExecutorTask(
         serializer: KSerializer<ServerResponse<T>>,
-        numOfStep: Int,
         workflow: suspend Job<T>.() -> T
     ): Traceable<T> {
-        val job = Job(numOfStep, ResultHolder(null, serializer))
+        val job = Job(0, ResultHolder(null, serializer))
         map[job.id] = job
         scope.launch {
             val result = kotlin.runCatching {
@@ -39,7 +37,6 @@ object OperationExecutor {
                 job.exceptionHolder = it
                 job.state = Traceable.State.THROWN
             }, onSuccess = {
-                /** Type Erase */
                 job.holder.result = it
                 job.state = Traceable.State.COMPUTED
             })

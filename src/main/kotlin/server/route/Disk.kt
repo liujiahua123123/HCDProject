@@ -25,7 +25,7 @@ fun Routing.diskRoute() {
     handleDataPost("/disk/addtag") {
         ifFromPortalPage { user, portal ->
             val request = call.readDataRequest<EditTagRequest>()
-            call.respondTraceable(OperationExecutor.addExecutorTask<Unit>(1) {
+            call.respondTraceable(OperationExecutor.addExecutorTask<Unit>{
                 httpOperationScope(portal) {
                     updateProgress(0, request.disks.size * 3, "Verify Request")
 
@@ -98,7 +98,7 @@ fun Routing.diskRoute() {
     handleDataPost("/disk/removetag") {
         ifFromPortalPage { user, portal ->
             val request = call.readDataRequest<EditTagRequest>()
-            call.respondTraceable(OperationExecutor.addExecutorTask<Unit>(1) {
+            call.respondTraceable(OperationExecutor.addExecutorTask<Unit>{
                 httpOperationScope(portal) {
                     updateProgress(0, request.disks.size * 3, "Verify Request")
 

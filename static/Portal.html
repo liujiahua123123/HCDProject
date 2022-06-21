@@ -261,6 +261,33 @@
             $("#remove_tag_all").click(function (){
                 remove_tag(["DATA_DISK","METADATA_DISK","WRITE_CACHE","READ_CACHE"])
             })
+            $("#create-cluster").click(function () {
+                document.dataPost("/cluster/new",{
+                    cluster: {
+                        clusterName: $("#create-cluster-cluster-name").val(),
+                        minClusterSize: $("#create-cluster-min-cluster-size").val(),
+                        replicationFactor: $("#create-cluster-replication-factor").val(),
+                        virtualIp: $("#create-cluster-virtual-ip").val(),
+                    },
+                    hosts: all_selected_host()
+                },function (_b,_a) {
+                    refresh()
+                })
+            })
+            $("#delete-cluster").click(function (){
+                document.dataPost("/cluster/delete",{
+                    clusters: all_selected_cluster()
+                },function (_b,_a) {
+                    refresh()
+                })
+            })
+            $("#remove-from-cluster").click(function () {
+                document.dataPost("/cluster/remove-host",{
+                    hosts: all_selected_host()
+                },function (_a,_b) {
+                    refresh()
+                })
+            })
         }
 
         $(window).ready(function () {
@@ -386,6 +413,34 @@
 
 <body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
 
+<div class="mdui-dialog" id="create-cluster-dialog">
+    <div class="mdui-dialog-content">
+        <div class="mdui-dialog-title">Create New Cluster With Selected Hosts</div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">Cluster Name (clusterName) </label>
+            <input class="mdui-textfield-input" id="create-cluster-cluster-name" type="text" name = "name"/>
+        </div>
+
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">Min Cluster Size (minClusterSize) </label>
+            <input class="mdui-textfield-input" id="create-cluster-min-cluster-size" type="number" name = "size" value="3"/>
+        </div>
+
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">How many copies (replicationFactor) </label>
+            <input class="mdui-textfield-input" id="create-cluster-replication-factor" type="number" name = "copy" value="3"/>
+        </div>
+
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">Virtual Ip (virtualIp) </label>
+            <input class="mdui-textfield-input" id="create-cluster-virtual-ip" type="text" name = "ip" value="192.168.1.248"/>
+        </div>
+    </div>
+    <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" id="create-cluster" mdui-dialog-close>Create Cluster</button>
+    </div>
+</div>
+
 <div class="mdui-toolbar mdui-color-theme">
     <span style="height: 100%">
         <img src="/logo.svg" style="height: 85%;margin-top: 7.5%">
@@ -502,9 +557,10 @@
         <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action" disabled>Join To
             Cluster
         </button>
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action" disabled>Create
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action" id="pop-create-cluster" mdui-dialog="{target: '#create-cluster-dialog'}" disabled>Create
             Cluster With Selected Host
         </button>
+        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action host-action" id="remove-from-cluster" disabled>REMOVE FROM CLUSTER</button>
 
         <div class="mdui-typo">
             <blockquote>
@@ -516,7 +572,7 @@
         <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action cluster-action" disabled>Save
             Cluster To Template
         </button>
-        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action cluster-action" disabled>CLEAN</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action cluster-action" id="delete-cluster" disabled>DELETE</button>
         <div class="mdui-typo">
             <blockquote>
                 <footer>

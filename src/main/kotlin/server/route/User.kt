@@ -44,8 +44,8 @@ fun Routing.userRoute(){
         ifLogin {user ->
             val data = call.readDataRequest<ConnectPortalRequest>()
 
-            call.respondTraceable(OperationExecutor.addExecutorTask<LoginResp>(2){
-                updateProgress("Exchanging Token")
+            call.respondTraceable(OperationExecutor.addExecutorTask<LoginResp>{
+                updateProgress(1,3, "Exchanging Token")
                 val resp = LoginOperation().apply {
                     this.portal = data.portal
                 }.invoke(
@@ -54,6 +54,7 @@ fun Routing.userRoute(){
                         password = data.password
                     )
                 )
+                updateProgress("Saving Credentials")
 
                 user.dataScope<ConnectionHistory> {
                     it.removeIf { ele -> ele.portal == data.portal}

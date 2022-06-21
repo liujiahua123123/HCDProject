@@ -62,9 +62,6 @@ class Requester{
     var portal: String = ""
 
     private val path: MutableList<String> = mutableListOf()
-    private fun addPathSegment(parameter: String) {
-        path.add(parameter)
-    }
 
     lateinit var data: Any
 
@@ -79,10 +76,10 @@ class Requester{
     fun addPipeline(pipeline: Pipeline) = pipelines.add(pipeline)
 
     suspend inline fun <reified T : Any> send(data: T): Response {
-        if (this.method == Method.GET || this.method == Method.FORM_POST || this.method == Method.DELETE) {
-            return sendImpl(data.asMap())
+        return if (this.method == Method.GET || this.method == Method.FORM_POST || this.method == Method.DELETE) {
+            sendImpl(data.asMap())
         } else {
-            return sendImpl(data)
+            sendImpl(data)
         }
     }
 
@@ -101,7 +98,6 @@ class Requester{
      * this function should not get called directly
      */
     suspend fun sendImpl(data: Any): Response {
-
         this.data = data
 
         pipelines.forEach {
@@ -120,7 +116,6 @@ class Requester{
                 }
 
                 /* Type Erase Warning */
-
                 try {
                     when (this@Requester.method) {
                         Method.FORM_POST -> {

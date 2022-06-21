@@ -8,7 +8,8 @@ data class HostInfo(
     val hostName: String,
     val state: String,
     val clusterId: String?,
-    val allowedToLeaveCluster: Boolean
+    val allowedToLeaveCluster: Boolean,
+    val managementAddress: String?
 )
 
 @Serializable

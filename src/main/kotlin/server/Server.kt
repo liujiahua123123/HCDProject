@@ -33,6 +33,7 @@ object Server {
             routing {
                 userRoute()
                 clusterRoute()
+                portalRoute()
                 hostRoute()
                 commonRoute()
                 diskRoute()

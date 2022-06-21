@@ -2,21 +2,27 @@ package server.route
 
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.supervisorScope
+import operation.cluster.CreateClusterInfo
+import operation.cluster.CreateClusterOperation
+import operation.cluster.CreateClusterReq
 import operation.host.*
 import operation.httpOperationScope
+import operation.task.TraceTaskOperation
+import operation.task.TraceTaskReq
 import server.handleDataPost
 import server.ifFromPortalPage
+import server.readDataRequest
 import server.respondTraceable
 import utils.DiskInfo
 import utils.OperationExecutor
 import java.util.Collections
 
 fun Routing.hostRoute() {
-
     handleDataPost("/host/list") {
         ifFromPortalPage { _, portal ->
-            call.respondTraceable(OperationExecutor.addExecutorTask<List<HostWithDisks>>(numOfStep = 2) {
+            call.respondTraceable(OperationExecutor.addExecutorTask<List<HostWithDisks>>{
                 httpOperationScope(portal) {
                     updateProgress("Listing Hosts")
 
@@ -41,7 +47,7 @@ fun Routing.hostRoute() {
 
     handleDataPost("/host/list-by-cluster"){
         ifFromPortalPage { _, portal ->
-            call.respondTraceable(OperationExecutor.addExecutorTask<List<ClusterWithHosts>>(numOfStep = 2) {
+            call.respondTraceable(OperationExecutor.addExecutorTask<List<ClusterWithHosts>>{
                 httpOperationScope(portal) {
                     updateProgress(0,1,"Listing Hosts")
 
@@ -73,6 +79,8 @@ fun Routing.hostRoute() {
             })
         }
     }
+
+
 }
 
 @kotlinx.serialization.Serializable
@@ -88,5 +96,4 @@ data class HostWithDisks(
 data class ClusterWithHosts(
     val clusterId: String?,
     val hosts: MutableList<HostWithDisks>
-
 )
