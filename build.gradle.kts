@@ -36,6 +36,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.5")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
 
+    implementation("org.apache.sshd:sshd-core:2.8.0")
+    implementation("org.apache.sshd:sshd-scp:2.8.0")
+    implementation("org.apache.sshd:sshd-netty:2.8.0")
+
+
     implementation(kotlinx("serialization-core", serializationVersion))
     implementation(kotlinx("serialization-json", serializationVersion))
 }

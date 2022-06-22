@@ -68,6 +68,7 @@ abstract class AuthedHttpOperation<I, O>(
     }
 }
 
+
 suspend fun main() {
     val op = LoginOperation()
 
@@ -80,3 +81,4 @@ suspend fun main() {
         )
     )
 }
+
