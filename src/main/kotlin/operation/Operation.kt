@@ -7,7 +7,9 @@ import operation.login.LoginReq
 import request.pipeline.AsyncLogger
 import request.pipeline.StatusChecker
 import operation.request.Requester
+import org.apache.sshd.client.SshClient
 import request.pipeline.KeyExchangePipeline
+import ssh.SSHCommandExecuteException
 import kotlin.reflect.full.createInstance
 
 interface Operation<I, O> {
@@ -38,6 +40,14 @@ abstract class HttpOperation<I, O>(
     }
 }
 
+abstract class SshOperation<I,O>: Operation<I,O>{
+    var sshClient: SshClient? = null
+
+    fun getClient(): SshClient{
+        return sshClient?: error("SshOperation need a specific client")
+    }
+}
+
 suspend fun <T> httpOperationScope(portal: String, builder: suspend HttpOperationBuilder.() -> T): T{
     return builder(HttpOperationBuilder(portal))
 }
@@ -57,6 +67,7 @@ class HttpOperationBuilder(
         return t.invoke(input)
     }
 }
+
 
 abstract class AuthedHttpOperation<I, O>(
    path: String, method: Requester.Method

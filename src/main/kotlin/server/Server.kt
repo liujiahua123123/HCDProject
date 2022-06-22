@@ -37,6 +37,7 @@ object Server {
                 hostRoute()
                 commonRoute()
                 diskRoute()
+                globalRoute()
             }
         }.start(wait = true)
     }

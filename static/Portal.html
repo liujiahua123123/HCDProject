@@ -288,6 +288,16 @@
                     refresh()
                 })
             })
+            $("#purge").click(function () {
+                mdui.confirm('Confirm Purge+Reconfig DataBase on ' + currentPortal(), function(){
+                    document.dataPost("/purge-db",{},function (_a,_b) {
+                        mdui.alert('DB Purged, Please ReConnect to this portal');
+                        setTimeout(function () {
+                            document.location.href = "/"
+                        })
+                    })
+                });
+            })
         }
 
         $(window).ready(function () {
@@ -583,6 +593,7 @@
         <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Create Cluster From
             Template
         </button>
+        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action" id="purge">PURGE DB AND RECONFIG</button>
     </div>
 </div>
 
