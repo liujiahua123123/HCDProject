@@ -86,10 +86,10 @@
             return list
         }
 
-        function selected_template(){
+        function selected_template() {
             let val = null
             $(".template-selector").each(function () {
-                if($(this).prop("checked")){
+                if ($(this).prop("checked")) {
                     val = $(this).attr("template-id")
                 }
             })
@@ -196,7 +196,7 @@
                     updateData(newData) {
                         this.data = newData
                     },
-                    updateTemplate(newTemplate){
+                    updateTemplate(newTemplate) {
                         this.templates = newTemplate
                     }
                 },
@@ -208,8 +208,8 @@
             }
 
             app = Vue.createApp(SourceData)
-            app.component('cluster-template',{
-                props: ['name', 'info','template_id'],
+            app.component('cluster-template', {
+                props: ['name', 'info', 'template_id'],
                 template: '#cluster-template-template'
             })
             app.component('disk', {
@@ -230,7 +230,7 @@
 
         function refresh() {
             $("#portal_ip").text(currentPortal())
-            document.dataPost("/available-template",{}, function (success, templates) {
+            document.dataPost("/available-template", {}, function (success, templates) {
                 vm.updateTemplate(templates)
                 document.dataPost("/host/list-by-cluster", {}, function (success, data) {
                     vm.updateData(data)
@@ -250,40 +250,42 @@
             }
         }
 
-        function eventListener(){
+        function eventListener() {
             let ignoreUnqualifiedPairs = $("#ignoreUnqualifiedPairs")
             let traceUntilComplete = $("#traceUntilComplete")
-            function add_tag(tags){
-                document.dataPost("/disk/addtag",{
+
+            function add_tag(tags) {
+                document.dataPost("/disk/addtag", {
                     tags: tags,
                     disks: all_selected_disk(),
                     ignoreUnqualifiedPairs: ignoreUnqualifiedPairs.prop("checked"),
                     traceUntilComplete: traceUntilComplete.prop("checked")
-                },refresh)
+                }, refresh)
             }
-            function remove_tag(tags){
-                document.dataPost("/disk/removetag",{
+
+            function remove_tag(tags) {
+                document.dataPost("/disk/removetag", {
                     tags: tags,
                     disks: all_selected_disk(),
                     ignoreUnqualifiedPairs: ignoreUnqualifiedPairs.prop("checked"),
                     traceUntilComplete: traceUntilComplete.prop("checked")
-                },refresh)
+                }, refresh)
             }
 
             $(".add_tag").click(function () {
                 add_tag([$(this).attr("tag")])
             })
             $("#add_tag_data_meta").click(function () {
-                add_tag(["DATA_DISK","METADATA_DISK"])
+                add_tag(["DATA_DISK", "METADATA_DISK"])
             })
             $(".remove_tag").click(function () {
                 remove_tag([$(this).attr("tag")])
             })
-            $("#remove_tag_all").click(function (){
-                remove_tag(["DATA_DISK","METADATA_DISK","WRITE_CACHE","READ_CACHE"])
+            $("#remove_tag_all").click(function () {
+                remove_tag(["DATA_DISK", "METADATA_DISK", "WRITE_CACHE", "READ_CACHE"])
             })
             $("#create-cluster").click(function () {
-                document.dataPost("/cluster/new",{
+                document.dataPost("/cluster/new", {
                     cluster: {
                         clusterName: $("#create-cluster-cluster-name").val(),
                         minClusterSize: $("#create-cluster-min-cluster-size").val(),
@@ -291,27 +293,27 @@
                         virtualIp: $("#create-cluster-virtual-ip").val(),
                     },
                     hosts: all_selected_host()
-                },function (_b,_a) {
+                }, function (_b, _a) {
                     refresh()
                 })
             })
-            $("#delete-cluster").click(function (){
-                document.dataPost("/cluster/delete",{
+            $("#delete-cluster").click(function () {
+                document.dataPost("/cluster/delete", {
                     clusters: all_selected_cluster()
-                },function (_b,_a) {
+                }, function (_b, _a) {
                     refresh()
                 })
             })
             $("#remove-from-cluster").click(function () {
-                document.dataPost("/cluster/remove-host",{
+                document.dataPost("/cluster/remove-host", {
                     hosts: all_selected_host()
-                },function (_a,_b) {
+                }, function (_a, _b) {
                     refresh()
                 })
             })
             $("#purge").click(function () {
-                mdui.confirm('Confirm Purge+Reconfig DataBase on ' + currentPortal(), function(){
-                    document.dataPost("/purge-db",{},function (_a,_b) {
+                mdui.confirm('Confirm Purge+Reconfig DataBase on ' + currentPortal(), function () {
+                    document.dataPost("/purge-db", {}, function (_a, _b) {
                         mdui.alert('DB Purged, Please ReConnect to this portal');
                         setTimeout(function () {
                             document.location.href = "/"
@@ -321,18 +323,18 @@
             })
             $("#save-cluster-template").click(function () {
                 let cluster = all_selected_cluster()
-                if(cluster.length !== 1){
+                if (cluster.length !== 1) {
                     alert("Please select only one cluster")
                     return
                 }
                 cluster = cluster[0]
                 mdui.prompt('Name of the template (save name will override)',
                     function (value) {
-                        document.dataPost("/cluster/save",{
+                        document.dataPost("/cluster/save", {
                             clusterId: cluster,
                             name: value
-                        },function (_a,_b) {
-                            if(_a) {
+                        }, function (_a, _b) {
+                            if (_a) {
                                 mdui.alert('Template saved');
                                 refresh()
                             }
@@ -342,18 +344,19 @@
             })
             $("#apply-template").click(function () {
                 let template = selected_template()
-                if(template == null){
+                if (template == null) {
                     alert("Please select one template")
                     return
                 }
-                document.dataPost("/apply-template",{
+                document.dataPost("/apply-template", {
                     templateId: template,
-                },function (_a,_b) {
+                }, function (_a, _b) {
                     refresh()
                 })
             })
 
         }
+
         $(window).ready(function () {
             vue()
             eventListener()
@@ -479,9 +482,9 @@
         <div class="mdui-list-item-content">
             <div class="mdui-list-item-title mdui-list-item-one-line">{{ name }}</div>
             <div class="mdui-list-item-text mdui-list-item-three-line">
-            <div v-for="content in info.split('\n')">
-                {{content}}
-            </div>
+                <div v-for="content in info.split('\n')">
+                    {{content}}
+                </div>
             </div>
         </div>
         <label class="mdui-radio">
@@ -515,22 +518,25 @@
         <div class="mdui-dialog-title">Create New Cluster With Selected Hosts</div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">Cluster Name (clusterName) </label>
-            <input class="mdui-textfield-input" id="create-cluster-cluster-name" type="text" name = "name"/>
+            <input class="mdui-textfield-input" id="create-cluster-cluster-name" type="text" name="name"/>
         </div>
 
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">Min Cluster Size (minClusterSize) </label>
-            <input class="mdui-textfield-input" id="create-cluster-min-cluster-size" type="number" name = "size" value="3"/>
+            <input class="mdui-textfield-input" id="create-cluster-min-cluster-size" type="number" name="size"
+                   value="3"/>
         </div>
 
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">How many copies (replicationFactor) </label>
-            <input class="mdui-textfield-input" id="create-cluster-replication-factor" type="number" name = "copy" value="3"/>
+            <input class="mdui-textfield-input" id="create-cluster-replication-factor" type="number" name="copy"
+                   value="3"/>
         </div>
 
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">Virtual Ip (virtualIp) </label>
-            <input class="mdui-textfield-input" id="create-cluster-virtual-ip" type="text" name = "ip" value="192.168.1.248"/>
+            <input class="mdui-textfield-input" id="create-cluster-virtual-ip" type="text" name="ip"
+                   value="192.168.1.248"/>
         </div>
     </div>
     <div class="mdui-dialog-actions">
@@ -551,6 +557,16 @@
     </div>
 </div>
 
+<div class="mdui-tab mdui-color-theme" mdui-tab>
+    <a href="#disk-management" class="">
+        <i class="mdui-icon material-icons">&#xe53b;</i>
+        <label>HOST & DISK</label>
+    </a>
+    <a href="#volume-management" class="">
+        <i class="mdui-icon material-icons">&#xe1a5;</i>
+        <label>Volume</label>
+    </a>
+</div>
 
 <div id="disk-management" class="mdui-container-fluid">
     <div id="disk-list">
@@ -636,8 +652,8 @@
                 <i class="mdui-checkbox-icon"></i>
                 Ignore Unqualified Disk/Tag Pair
             </label></br>
-            <label class="mdui-checkbox" >
-                <input type="checkbox" id="traceUntilComplete" checked />
+            <label class="mdui-checkbox">
+                <input type="checkbox" id="traceUntilComplete" checked/>
                 <i class="mdui-checkbox-icon"></i>
                 Suspend Until Complete
             </label>
@@ -651,10 +667,13 @@
             </blockquote>
         </div>
 
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action" id="pop-create-cluster" mdui-dialog="{target: '#create-cluster-dialog'}" disabled>Create
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action"
+                id="pop-create-cluster" mdui-dialog="{target: '#create-cluster-dialog'}" disabled>Create
             Cluster With Selected Host
         </button>
-        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action host-action" id="remove-from-cluster" disabled>REMOVE FROM CLUSTER</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action host-action" id="remove-from-cluster"
+                disabled>REMOVE FROM CLUSTER
+        </button>
 
         <div class="mdui-typo">
             <blockquote>
@@ -663,10 +682,13 @@
                 </footer>
             </blockquote>
         </div>
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action cluster-action" id="save-cluster-template" disabled>Save
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action cluster-action"
+                id="save-cluster-template" disabled>Save
             Cluster To Template
         </button>
-        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action cluster-action" id="delete-cluster" disabled>DELETE</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action cluster-action" id="delete-cluster"
+                disabled>DELETE
+        </button>
         <div class="mdui-typo">
             <blockquote>
                 <footer>
@@ -674,12 +696,82 @@
                 </footer>
             </blockquote>
         </div>
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action" mdui-dialog="{target: '#select-template-dialog'}">Create Cluster From
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action"
+                mdui-dialog="{target: '#select-template-dialog'}">Create Cluster From
             Template
         </button>
-        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action" id="purge">PURGE DB AND RECONFIG</button>
+        <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action" id="purge">PURGE DB AND RECONFIG
+        </button>
     </div>
 </div>
 
+
+<div id="volume-management" class="mdui-container-fluid">
+
+
+    <div class="mdui-table-fluid">
+        <table class="mdui-table mdui-table-selectable">
+            <thead>
+            <tr>
+                <th>Cluster - {ID}</th>
+                <th>volumeName</th>
+                <th class="mdui-table-col-numeric">volumeSize</th>
+                <th class="mdui-table-col-numeric">blockSize</th>
+                <th>status</th>
+                <th>accessLevel</th>
+                <th>compressionAlgorithm</th>
+                <th>address</th>
+                <th class="mdui-table-col-numeric">port</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>ID</td>
+                <td>Name</td>
+                <td>159</td>
+                <td>6.0</td>
+                <td>24</td>
+                <td>4.0</td>
+                <td>87</td>
+                <td>14%</td>
+                <td>1%</td>
+            </tr>
+            </tbody>
+        </table>
+        <table class="mdui-table">
+            <tbody>
+            <tr>
+                <td style="width: 200px;!important;padding: 0 0 0 20px;">
+                    <label>
+                        <input class="mdui-textfield-input" type="text" placeholder="Volume Name"/>
+                    </label>
+                </td>
+                <td style="width: 200px;!important;padding: 0 0 0 5px;">
+                    <label>
+                        <input class="mdui-textfield-input" type="text" placeholder="Volume Size"/>
+                    </label>
+                </td>
+                <td style="width: 200px;!important;padding: 0 0 0 5px;">
+                    <label>
+                        <input class="mdui-textfield-input" type="text" placeholder="Block Size"/>
+                    </label>
+                </td>
+                <td style="width: 200px;!important;padding: 0 0 0 5px;">
+                    <label>
+                        <select class="mdui-select">
+                            <option value="NORMAL">NORMAl</option>
+                            <option value="CSI">CSI</option>
+                        </select>
+                    </label>
+                </td>
+                <td style="float: right">
+                    <button class="mdui-btn mdui-color-theme-accent"> create new</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    </div>
 </body>
 </html>
