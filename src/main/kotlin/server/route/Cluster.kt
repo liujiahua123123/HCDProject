@@ -5,14 +5,15 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.delay
 import operation.HttpOperationBuilder
 import operation.cluster.*
+import operation.host.ListDiskByHostOperation
+import operation.host.ListDiskByHostReq
 import operation.host.ListHostOperation
 import operation.host.ListHostReq
 import operation.httpOperationScope
 import operation.task.TraceTaskOperation
 import operation.task.TraceTaskReq
 import server.*
-import utils.Job
-import utils.OperationExecutor
+import utils.*
 
 fun Routing.clusterRoute() {
     handleDataPost("/cluster/new"){
@@ -84,7 +85,48 @@ fun Routing.clusterRoute() {
         }
     }
 
+    handleDataPost("/cluster/save"){
+        ifFromPortalPage { user, portal ->
+            val request = call.readDataRequest<SaveTemplateRequest>()
+            val requestCluster = request.clusterId
+            call.respondTraceable(OperationExecutor.addExecutorTask<Unit> {
+                httpOperationScope(portal){
+                    updateProgress(1,5,"Saving Cluster Info")
+                    val data = create<ListClusterOperation>().invoke(ListClusterReq()).data.firstOrNull { it.clusterId == requestCluster }?: userInputError("cluster id not found")
+                    val req = CreateClusterInfo(clusterName = data.clusterName, minClusterSize = data.minClusterSize, replicationFactor = data.replicationFactor, virtualIp = data.virtualIp)
+                    updateProgress("Saving Host Info")
+                    val hosts = create<ListHostOperation>().invoke(ListHostReq(clusterId = requestCluster)).data
+
+                    updateProgress("Saving Disk Info")
+                    val hostToSave = mutableMapOf<String, HostTemplate>()
+                    hosts.forEach {
+                        hostToSave[it.hostName] = HostTemplate(
+                            disks = create<ListDiskByHostOperation>().invoke(ListDiskByHostReq(hostId = it.hostId)).data.associate { disk ->
+                                Pair(disk.diskSerialNumber, DiskTemplate(disk.diskTagList))
+                            }
+                        )
+                    }
+
+                    updateProgress("Wrapping and Saving")
+                    user.dataScope<ClusterTemplate> {
+                        it.removeIf { x -> x.templateName == request.name }
+                        it.add(ClusterTemplate(
+                            creator = req,
+                            portal = portal,
+                            hosts = hostToSave,
+                            templateName = request.name,
+                        ))
+                        true
+                    }
+
+                    updateProgress("Sync")
+                    delay(3000)
+                }
+            })
+        }
+    }
 }
+
 
 suspend fun Job<*>.trackUntilComplete(totalSize: Int, list: MutableList<String>, scope:HttpOperationBuilder){
     while (list.isNotEmpty()){
@@ -108,4 +150,11 @@ data class DeleteClusterRequest(
 @kotlinx.serialization.Serializable
 data class RemoveHostFromClusterRequest(
     val hosts: List<String>
+)
+
+
+@kotlinx.serialization.Serializable
+data class SaveTemplateRequest(
+    val clusterId: String,
+    val name: String,
 )

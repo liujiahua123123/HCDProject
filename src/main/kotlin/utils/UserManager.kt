@@ -5,6 +5,9 @@ import io.ktor.util.collections.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.html.currentTimeMillis
+import operation.cluster.CreateClusterInfo
+import operation.cluster.CreateClusterReq
+import server.route.HostWithDisks
 import java.util.Collections
 
 
@@ -114,6 +117,25 @@ data class ConnectionHistory(
     val username: String,
     val password: String
 ): UserData()
+
+
+@kotlinx.serialization.Serializable
+data class ClusterTemplate(
+    val templateName: String,
+    val portal: String,
+    val creator: CreateClusterInfo,
+    val hosts: Map<String, HostTemplate>
+): UserData()
+
+@kotlinx.serialization.Serializable
+data class HostTemplate(
+    val disks: Map<String, DiskTemplate>
+)
+
+@kotlinx.serialization.Serializable
+data class DiskTemplate(
+    val tags: List<String>
+)
 
 object UserDataManagement {
     val lock = Mutex()

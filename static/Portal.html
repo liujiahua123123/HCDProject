@@ -86,6 +86,16 @@
             return list
         }
 
+        function selected_template(){
+            let val = null
+            $(".template-selector").each(function () {
+                if($(this).prop("checked")){
+                    val = $(this).attr("template-id")
+                }
+            })
+            return val
+        }
+
         function all_selected_host() {
             let list = []
             $(".host-checkbox").each(function () {
@@ -179,11 +189,15 @@
                 data() {
                     return {
                         data: [],
+                        templates: []
                     }
                 },
                 methods: {
                     updateData(newData) {
                         this.data = newData
+                    },
+                    updateTemplate(newTemplate){
+                        this.templates = newTemplate
                     }
                 },
                 updated() {
@@ -194,6 +208,10 @@
             }
 
             app = Vue.createApp(SourceData)
+            app.component('cluster-template',{
+                props: ['name', 'info','template_id'],
+                template: '#cluster-template-template'
+            })
             app.component('disk', {
                 props: ['disk_info', 'host_id'],
                 template: '#disk-template'
@@ -206,14 +224,17 @@
                 props: ['cluster_id', 'hosts'],
                 template: '#cluster-template'
             })
-            vm = app.mount("#disk-management")
+            vm = app.mount("body")
             onUpdate()
         }
 
         function refresh() {
             $("#portal_ip").text(currentPortal())
-            document.dataPost("/host/list-by-cluster", {}, function (success, data) {
-                vm.updateData(data)
+            document.dataPost("/available-template",{}, function (success, templates) {
+                vm.updateTemplate(templates)
+                document.dataPost("/host/list-by-cluster", {}, function (success, data) {
+                    vm.updateData(data)
+                })
             })
         }
 
@@ -298,8 +319,41 @@
                     })
                 });
             })
-        }
+            $("#save-cluster-template").click(function () {
+                let cluster = all_selected_cluster()
+                if(cluster.length !== 1){
+                    alert("Please select only one cluster")
+                    return
+                }
+                cluster = cluster[0]
+                mdui.prompt('Name of the template (save name will override)',
+                    function (value) {
+                        document.dataPost("/cluster/save",{
+                            clusterId: cluster,
+                            name: value
+                        },function (_a,_b) {
+                            if(_a) {
+                                mdui.alert('Template saved');
+                                refresh()
+                            }
+                        })
+                    }
+                );
+            })
+            $("#apply-template").click(function () {
+                let template = selected_template()
+                if(template == null){
+                    alert("Please select one template")
+                    return
+                }
+                document.dataPost("/apply-template",{
+                    templateId: template,
+                },function (_a,_b) {
+                    refresh()
+                })
+            })
 
+        }
         $(window).ready(function () {
             vue()
             eventListener()
@@ -319,7 +373,6 @@
                     {{ cluster_id == null ? "Free Hosts (hosts not in any cluster)" : "Cluster " + cluster_id }}
                 </div>
                 <i open=open class="mdui-collapse-item-arrow mdui-icon material-icons open-all-host">format_align_justify</i>
-
 
                 <label v-if="cluster_id != null" class="mdui-checkbox">
                     <input class="cluster-checkbox" v-bind:cluster_id="cluster_id" type="checkbox" name="group1"/>
@@ -345,6 +398,7 @@
         </li>
     </ul>
 </template>
+
 <template id="host-template">
     <ul class="mdui-list host-head" mdui-collapse="{}">
         <li class="mdui-collapse-item">
@@ -420,8 +474,41 @@
     </li>
 </template>
 
+<template id="cluster-template-template">
+    <li class="mdui-list-item">
+        <div class="mdui-list-item-content">
+            <div class="mdui-list-item-title mdui-list-item-one-line">{{ name }}</div>
+            <div class="mdui-list-item-text mdui-list-item-three-line">
+            <div v-for="content in info.split('\n')">
+                {{content}}
+            </div>
+            </div>
+        </div>
+        <label class="mdui-radio">
+            <input v-bind:template-id="template_id" class="template-selector" type="radio" name="template-select"/>
+            <i class="mdui-radio-icon"></i>
+        </label>
+    </li>
+</template>
 
 <body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
+
+
+<div class="mdui-dialog" id="select-template-dialog">
+    <div class="mdui-dialog-content">
+        <div class="mdui-dialog-title">Select a template</div>
+        <ul class="mdui-list">
+            <cluster-template v-for="template in templates"
+                              v-bind:name="template.name"
+                              v-bind:info="template.info"
+                              v-bind:template_id="template.id"
+            ></cluster-template>
+        </ul>
+    </div>
+    <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" id="apply-template" mdui-dialog-close>Apply</button>
+    </div>
+</div>
 
 <div class="mdui-dialog" id="create-cluster-dialog">
     <div class="mdui-dialog-content">
@@ -564,9 +651,6 @@
             </blockquote>
         </div>
 
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action" disabled>Join To
-            Cluster
-        </button>
         <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action host-action" id="pop-create-cluster" mdui-dialog="{target: '#create-cluster-dialog'}" disabled>Create
             Cluster With Selected Host
         </button>
@@ -579,7 +663,7 @@
                 </footer>
             </blockquote>
         </div>
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action cluster-action" disabled>Save
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action cluster-action" id="save-cluster-template" disabled>Save
             Cluster To Template
         </button>
         <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action cluster-action" id="delete-cluster" disabled>DELETE</button>
@@ -590,7 +674,7 @@
                 </footer>
             </blockquote>
         </div>
-        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action">Create Cluster From
+        <button class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple action" mdui-dialog="{target: '#select-template-dialog'}">Create Cluster From
             Template
         </button>
         <button class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple action" id="purge">PURGE DB AND RECONFIG</button>

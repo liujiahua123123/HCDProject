@@ -1,6 +1,17 @@
 package utils
 
 import kotlinx.serialization.Serializable
+import operation.cluster.CreateClusterInfo
+
+
+@Serializable
+data class ClusterInfo(
+    val clusterId: String,
+    val clusterName: String,
+    val replicationFactor: Int,
+    val minClusterSize: Int,
+    val virtualIp: String
+)
 
 @Serializable
 data class HostInfo(
