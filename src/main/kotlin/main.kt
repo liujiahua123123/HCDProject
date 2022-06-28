@@ -44,7 +44,6 @@ fun setup(){
     context.init(null, trustManagerArray, SecureRandom())
     HttpsURLConnection.setDefaultSSLSocketFactory(context.socketFactory)
     HttpsURLConnection.setDefaultHostnameVerifier { _, _ -> true }
-
 }
 
 suspend fun main(){

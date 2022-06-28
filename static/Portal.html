@@ -230,11 +230,10 @@
 
         function refresh() {
             $("#portal_ip").text(currentPortal())
-            document.dataPost("/available-template", {}, function (success, templates) {
-                vm.updateTemplate(templates)
-                document.dataPost("/host/list-by-cluster", {}, function (success, data) {
-                    vm.updateData(data)
-                })
+            document.dataPost("/portal/refresh", {}, function (success, result) {
+                vm.updateTemplate(result.templates)
+                vm.updateData(result.hosts)
+                console.log(result.volumes)
             })
         }
 

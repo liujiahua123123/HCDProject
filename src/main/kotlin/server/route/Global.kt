@@ -83,39 +83,6 @@ fun Routing.globalRoute() {
         }
     }
 
-    handleDataPost("/available-template") {
-        ifFromPortalPage { user, portal ->
-            val list = mutableListOf<TemplateDigest>()
-            user.dataScope<ClusterTemplate> { all ->
-                all.filter { it.portal == portal }.forEach {
-                    list.add(TemplateDigest(
-                        id = it.id,
-                        name = it.templateName,
-                        info = buildString {
-                            append("Will create cluster: ")
-                            append(it.creator.clusterName)
-                            append(" with IP=")
-                            append(it.creator.virtualIp)
-                            append(", Replication=")
-                            append(it.creator.replicationFactor)
-                            append(", MinClusterSize=")
-                            append(it.creator.minClusterSize)
-                            append("\n")
-                            append("Involve Hosts: ")
-                            append(it.hosts.keys.joinToString(","))
-                            append("\n")
-                            append("Involve Volumes: ")
-                            append("TODO")
-                        }
-                    ))
-                }
-                false
-            }
-            call.respondOK(list)
-        }
-    }
-
-
     handleDataPost("/apply-template") {
         ifFromPortalPage { user, portal ->
             val request = call.readDataRequest<ApplyTemplateRequest>()
@@ -214,11 +181,4 @@ fun Routing.globalRoute() {
 @kotlinx.serialization.Serializable
 data class ApplyTemplateRequest(
     val templateId: String
-)
-
-@kotlinx.serialization.Serializable
-data class TemplateDigest(
-    val name: String,
-    val info: String,
-    val id: String
 )

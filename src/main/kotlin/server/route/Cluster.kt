@@ -152,7 +152,6 @@ data class RemoveHostFromClusterRequest(
     val hosts: List<String>
 )
 
-
 @kotlinx.serialization.Serializable
 data class SaveTemplateRequest(
     val clusterId: String,

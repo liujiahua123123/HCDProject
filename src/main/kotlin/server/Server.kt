@@ -31,6 +31,7 @@ object Server {
         println("Starting server at 0.0.0.0:${PORT}")
         embeddedServer(Netty, port = PORT, host = "0.0.0.0") {
             routing {
+                volumeRoute()
                 userRoute()
                 clusterRoute()
                 portalRoute()
