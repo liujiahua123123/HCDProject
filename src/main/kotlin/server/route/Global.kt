@@ -136,8 +136,6 @@ fun Routing.globalRoute() {
                     updateProgress(3, 6, "Setting up volumes")
 
 
-
-
                     val allTask = allJobs.size
                     while (allJobs.isNotEmpty()) {
                         updateProgress(4, 6, "Waiting for all task to complete (" + (allTask - allJobs.size) + "/" + allTask + ")")
