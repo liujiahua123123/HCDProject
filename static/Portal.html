@@ -367,11 +367,7 @@
                     alert("Please select one template")
                     return
                 }
-                document.dataPost("/apply-template", {
-                    templateId: template,
-                }, function (_a, _b) {
-                    refresh()
-                })
+                document.dataPost("/apply-template", {templateId: template,}, refresh)
             })
             $("#volume-management").on('click','.create-volume',function(){
                 let parents = $(this).parent().parent()
@@ -386,9 +382,7 @@
                     volumeSize: size,
                     blockSize: block,
                     type: type
-                }, function (_a, _b) {
-                    refresh()
-                })
+                }, refresh)
             })
             $("#delete-volume").click(function () {
                 let list = []

@@ -2,6 +2,7 @@ package operation.volumeaccessgroup
 
 import operation.AuthedHttpOperation
 import operation.request.Requester
+import utils.KeyExchangeService
 
 
 @kotlinx.serialization.Serializable
@@ -22,3 +23,12 @@ class ListVolumeAccessGroupOperation: AuthedHttpOperation<ListVolumeAccessGroupR
     }.send(input).parse()
 }
 
+
+suspend fun main(){
+    KeyExchangeService.register("172.16.4.248:8443", "admin", "Hello123")
+    ListVolumeAccessGroupOperation().apply {
+        portal = "172.16.4.248:8443"
+    }.invoke(ListVolumeAccessGroupReq(
+        clusterId = "5546fad7-9839-4989-a006-7edfdfcc0fde"
+    ))
+}
