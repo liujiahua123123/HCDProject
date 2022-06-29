@@ -169,7 +169,7 @@ data class Response(
 ) {
     inline fun <reified T : Any> parse(): T {
         try {
-            return ServerJson.decodeFromString(this.body)
+            return ServerJson.decodeFromString(this.body.run { ifEmpty { "{}" } })
         } catch (e: Exception) {
             throw ResponseBodyException("Failed to deserialize response as ${T::class.simpleName}, raw data = $body").apply {
                 addSuppressed(e)

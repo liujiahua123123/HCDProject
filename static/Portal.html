@@ -67,6 +67,10 @@
             font-family: monospace;
         }
 
+        #volume-management{
+            font-family: monospace;
+        }
+
     </style>
 
     <script>
@@ -182,6 +186,7 @@
             const onUpdate = function () {
                 console.log("VUE updated")
                 mdui.mutation()
+                mdui.updateTables()
                 renderHostCollapse()
             }
 
@@ -189,15 +194,15 @@
                 data() {
                     return {
                         data: [],
-                        templates: []
+                        templates: [],
+                        volumes: {},
                     }
                 },
                 methods: {
-                    updateData(newData) {
+                    updateData(newData, newTemplates, newVolumes) {
                         this.data = newData
-                    },
-                    updateTemplate(newTemplate) {
-                        this.templates = newTemplate
+                        this.templates = newTemplates
+                        this.volumes = newVolumes
                     }
                 },
                 updated() {
@@ -208,6 +213,10 @@
             }
 
             app = Vue.createApp(SourceData)
+            app.component('cluster-volume',{
+                props: ['cluster_id','all_volume_data'],
+                template: '#cluster-volume-template',
+            })
             app.component('cluster-template', {
                 props: ['name', 'info', 'template_id'],
                 template: '#cluster-template-template'
@@ -231,9 +240,8 @@
         function refresh() {
             $("#portal_ip").text(currentPortal())
             document.dataPost("/portal/refresh", {}, function (success, result) {
-                vm.updateTemplate(result.templates)
-                vm.updateData(result.hosts)
                 console.log(result.volumes)
+                vm.updateData(result.hosts,result.templates,result.volumes)
             })
         }
 
@@ -283,6 +291,7 @@
             $("#remove_tag_all").click(function () {
                 remove_tag(["DATA_DISK", "METADATA_DISK", "WRITE_CACHE", "READ_CACHE"])
             })
+
             $("#create-cluster").click(function () {
                 document.dataPost("/cluster/new", {
                     cluster: {
@@ -296,6 +305,7 @@
                     refresh()
                 })
             })
+
             $("#delete-cluster").click(function () {
                 document.dataPost("/cluster/delete", {
                     clusters: all_selected_cluster()
@@ -303,6 +313,7 @@
                     refresh()
                 })
             })
+
             $("#remove-from-cluster").click(function () {
                 document.dataPost("/cluster/remove-host", {
                     hosts: all_selected_host()
@@ -310,6 +321,7 @@
                     refresh()
                 })
             })
+
             $("#purge").click(function () {
                 mdui.confirm('Confirm Purge+Reconfig DataBase on ' + currentPortal(), function () {
                     document.dataPost("/purge-db", {}, function (_a, _b) {
@@ -353,7 +365,37 @@
                     refresh()
                 })
             })
-
+            $("#volume-management").on('click','.create-volume',function(){
+                let parents = $(this).parent().parent()
+                let cluster = parents.find(".create_volume_cluster_id").val()
+                let volume = parents.find(".create_volume_volume_name").val()
+                let size = parents.find(".create_volume_volume_size").val()
+                let block = parents.find(".create_volume_block_size").val()
+                let type = parents.find(".create_volume_volume_type").val()
+                document.dataPost("/volume/create", {
+                    volumeName: volume,
+                    clusterId: cluster,
+                    volumeSize: size,
+                    blockSize: block,
+                    type: type
+                }, function (_a, _b) {
+                    refresh()
+                })
+            })
+            $("#delete-volume").click(function () {
+                let list = []
+                $(".volume-line.mdui-table-row-selected").each(function() {
+                    list[list.length] = {
+                        "clusterId": $(this).attr("cluster-id"),
+                        "volumeId": $(this).find(".volume-id").text()
+                    }
+                })
+                if(list.length === 0){
+                    alert("No selected volume")
+                    return
+                }
+                document.dataPost("/volume/delete", list, refresh)
+            })
         }
 
         $(window).ready(function () {
@@ -492,6 +534,72 @@
         </label>
     </li>
 </template>
+
+<template id="cluster-volume-template">
+    <div class="mdui-table-fluid" style="margin-top: 15px">
+        <table class="mdui-table mdui-table-selectable">
+            <thead>
+            <tr>
+                <th>{{cluster_id}}</th>
+                <th>volumeName</th>
+                <th class="mdui-table-col-numeric">volumeSize</th>
+                <th class="mdui-table-col-numeric">blockSize</th>
+                <th>status</th>
+                <th>accessLevel</th>
+                <th>compressionAlgorithm</th>
+                <th>iscsiTarget/iqn</th>
+            </tr>
+            </thead>
+            <tbody v-for="volume_data in all_volume_data">
+            <tr is="t-item" class="volume-line" v-bind:cluster-id="cluster_id">
+                <td class="volume-id">{{volume_data.volumeId}}</td>
+                <td>{{volume_data.volumeName}}</td>
+                <td>{{volume_data.volumeSize}}</td>
+                <td>{{volume_data.blockSize}}</td>
+                <td>{{volume_data.status}}</td>
+                <td>{{volume_data.accessLevel}}</td>
+                <td>{{volume_data.compressionAlgorithm}}</td>
+                <td>{{volume_data.iscsiTarget.iqn}}</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <table class="mdui-table">
+            <tbody>
+            <tr>
+                <td style="width: 200px;!important;padding: 0 0 0 20px;">
+                    <label>
+                        <input class="mdui-textfield-input create_volume_volume_name" type="text" placeholder="Volume Name"/>
+                    </label>
+                </td>
+                <td style="width: 200px;!important;padding: 0 0 0 5px;">
+                    <label>
+                        <input class="mdui-textfield-input create_volume_volume_size" type="number" placeholder="Volume Size"/>
+                    </label>
+                </td>
+                <td style="width: 200px;!important;padding: 0 0 0 5px;">
+                    <label>
+                        <input class="mdui-textfield-input create_volume_block_size" type="number" placeholder="Block Size"/>
+                    </label>
+                </td>
+                <input type="hidden" class="create_volume_cluster_id" v-bind:value="cluster_id">
+                <td style="width: 200px;!important;padding: 0 0 0 5px;">
+                    <label>
+                        <select class="mdui-select create_volume_volume_type">
+                            <option value="NORMAL">NORMAl</option>
+                            <option value="CSI">CSI</option>
+                        </select>
+                    </label>
+                </td>
+                <td style="float: right">
+                    <button class="mdui-btn mdui-color-theme-accent create-volume">CREATE NEW</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</template>
+
 
 <body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
 
@@ -704,73 +812,16 @@
     </div>
 </div>
 
-
 <div id="volume-management" class="mdui-container-fluid">
+    <cluster-volume v-for="(value, key) in volumes" v-bind:cluster_id="key"  v-bind:test="key" v-bind:all_volume_data="value"></cluster-volume>
 
-
-    <div class="mdui-table-fluid">
-        <table class="mdui-table mdui-table-selectable">
-            <thead>
-            <tr>
-                <th>Cluster - {ID}</th>
-                <th>volumeName</th>
-                <th class="mdui-table-col-numeric">volumeSize</th>
-                <th class="mdui-table-col-numeric">blockSize</th>
-                <th>status</th>
-                <th>accessLevel</th>
-                <th>compressionAlgorithm</th>
-                <th>address</th>
-                <th class="mdui-table-col-numeric">port</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>ID</td>
-                <td>Name</td>
-                <td>159</td>
-                <td>6.0</td>
-                <td>24</td>
-                <td>4.0</td>
-                <td>87</td>
-                <td>14%</td>
-                <td>1%</td>
-            </tr>
-            </tbody>
-        </table>
-        <table class="mdui-table">
-            <tbody>
-            <tr>
-                <td style="width: 200px;!important;padding: 0 0 0 20px;">
-                    <label>
-                        <input class="mdui-textfield-input" type="text" placeholder="Volume Name"/>
-                    </label>
-                </td>
-                <td style="width: 200px;!important;padding: 0 0 0 5px;">
-                    <label>
-                        <input class="mdui-textfield-input" type="text" placeholder="Volume Size"/>
-                    </label>
-                </td>
-                <td style="width: 200px;!important;padding: 0 0 0 5px;">
-                    <label>
-                        <input class="mdui-textfield-input" type="text" placeholder="Block Size"/>
-                    </label>
-                </td>
-                <td style="width: 200px;!important;padding: 0 0 0 5px;">
-                    <label>
-                        <select class="mdui-select">
-                            <option value="NORMAL">NORMAl</option>
-                            <option value="CSI">CSI</option>
-                        </select>
-                    </label>
-                </td>
-                <td style="float: right">
-                    <button class="mdui-btn mdui-color-theme-accent"> create new</button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+    <div class="mdui-fab-wrapper" id="deleteFab">
+        <button class="mdui-fab mdui-ripple mdui-color-theme-accent" id="delete-volume">
+            <!-- 默认显示的图标 -->
+            <i class="mdui-icon material-icons">delete</i>
+        </button>
     </div>
+</div>
 
-    </div>
 </body>
 </html>

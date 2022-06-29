@@ -16,7 +16,7 @@ class DeleteVolumeResp()
 
 class DeleteVolumeOperation:AuthedHttpOperation<DeleteVolumeReq,DeleteVolumeResp>(
     method = Requester.Method.DELETE,
-    path = "/volumes/",
+    path = "/v1/volumes/",
 ) {
     override suspend fun invoke(input: DeleteVolumeReq): DeleteVolumeResp {
         return getRequester().apply {

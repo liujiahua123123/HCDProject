@@ -17,12 +17,10 @@ import operation.host.ListHostReq
 import operation.httpOperationScope
 import operation.task.TraceTaskOperation
 import operation.task.TraceTaskReq
-import org.apache.sshd.client.SshClient
 import server.*
 import ssh.HCDSshClient
 import utils.ClusterTemplate
 import utils.OperationExecutor
-import utils.dataScope
 import utils.getAllData
 
 fun Routing.globalRoute() {

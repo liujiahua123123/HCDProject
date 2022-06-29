@@ -12,12 +12,13 @@ data class CreateVolumeReq(
     val type: String
 )
 
+@kotlinx.serialization.Serializable
 data class CreateVolumeResp(
     val taskId: String
 )
 
 class CreateVolumeOperation: AuthedHttpOperation<CreateVolumeReq, CreateVolumeResp>(
-    method = Requester.Method.PUT,
+    method = Requester.Method.POST,
     path = "/v1/volumes/task/create"
 ) {
     override suspend fun invoke(input: CreateVolumeReq): CreateVolumeResp = getRequester().send(input).parse()
