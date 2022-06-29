@@ -71,6 +71,10 @@
             font-family: monospace;
         }
 
+        #initiator-management{
+            font-family: monospace;
+        }
+
     </style>
 
     <script>
@@ -232,6 +236,10 @@
             app.component('cluster', {
                 props: ['cluster_id', 'hosts'],
                 template: '#cluster-template'
+            })
+            app.component('initiator', {
+                props: ['iqn', 'initiator_name'], 
+                template: '#initiator-template'
             })
             vm = app.mount("body")
             onUpdate()
@@ -600,6 +608,10 @@
     </div>
 </template>
 
+<template id="initiator-template">
+    <p>initiator info goes here</p>
+</template>
+
 
 <body class="mdui-theme-layout-dark mdui-theme-primary-amber mdui-theme-accent-orange">
 
@@ -672,6 +684,10 @@
     <a href="#volume-management" class="">
         <i class="mdui-icon material-icons">&#xe1a5;</i>
         <label>Volume</label>
+    </a>
+    <a href="#initiator-management" class="">
+        <i class="mdui-icon material-icons">&#xe853;</i>
+        <label>Initiator</label>
     </a>
 </div>
 
@@ -821,6 +837,10 @@
             <i class="mdui-icon material-icons">delete</i>
         </button>
     </div>
+</div>
+
+<div id="initiator-management" class="mdui-container-fluid">
+    <initiator></initiator>
 </div>
 
 </body>
