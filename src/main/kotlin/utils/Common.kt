@@ -65,3 +65,12 @@ data class IscsiTarget(
     val port: Int,
     val iqn: String
 )
+
+@Serializable
+data class Initiator(
+    val initiatorId: String,
+    val initiatorName: String,
+    val iqn: String
+)
+
+
