@@ -67,11 +67,11 @@
             font-family: monospace;
         }
 
-        #volume-management{
+        #volume-management {
             font-family: monospace;
         }
 
-        #initiator-management{
+        #initiator-management {
             font-family: monospace;
         }
 
@@ -197,18 +197,34 @@
             const SourceData = {
                 data() {
                     return {
-                        data: [],
+                        clusters: [],
+                        hostsAndDisks: [],
                         templates: [],
                         volumes: {},
                         initiators: [],
+                        volumeAccessGroups: [],
+                        idObjSelector:{
+                            options: [],
+                            name: "",
+                            optionNameField: "",
+                            optionIdField: "",
+                        }
                     }
                 },
                 methods: {
-                    updateData(newData, newTemplates, newVolumes, newInitiators) {
-                        this.data = newData
+                    updateData(newClusters, newHostsAndDisks, newTemplates, newVolumes, newInitiators, newVolumeAccessGroups) {
+                        this.clusters = newClusters
+                        this.hostsAndDisks = newHostsAndDisks
                         this.templates = newTemplates
                         this.volumes = newVolumes
                         this.initiators = newInitiators
+                        this.volumeAccessGroups = newVolumeAccessGroups
+                    },
+                    idObjSelectorData(name, options, optionNameField, optionIdField) {
+                        this.idObjSelector.name = name
+                        this.idObjSelector.options = options
+                        this.idObjSelector.optionIdField = optionIdField
+                        this.idObjSelector.optionNameField = optionNameField
                     }
                 },
                 updated() {
@@ -219,8 +235,12 @@
             }
 
             app = Vue.createApp(SourceData)
-            app.component('cluster-volume',{
-                props: ['cluster_id','all_volume_data'],
+            app.component('volume-access-group',{
+                props: ['data'],
+                template: '#volume-access-group-template'
+            })
+            app.component('cluster-volume', {
+                props: ['cluster_id', 'all_volume_data'],
                 template: '#cluster-volume-template',
             })
             app.component('cluster-template', {
@@ -250,8 +270,7 @@
         function refresh() {
             $("#portal_ip").text(currentPortal())
             document.dataPost("/portal/refresh", {}, function (success, result) {
-                console.log(result.volumes)
-                vm.updateData(result.hosts,result.templates,result.volumes,result.initiators)
+                vm.updateData(result.clusters, result.hostsAndDisks, result.templates, result.volumes, result.initiators, result.volumeAccessGroups)
             })
         }
 
@@ -266,6 +285,35 @@
                 }
             }
         }
+        var idobjSelector = null
+        var idObjcallback = null
+        function idObjSelect(name, options, nameField, idField,callback){
+            vm.idObjSelectorData(name, options, nameField, idField)
+            idObjcallback = callback
+            if(idobjSelector == null){
+                idobjSelector = new mdui.Dialog("#Id-object-selector", {
+                    modal: true
+                });
+                $("#ido-selected").click(function () {
+                    let val = null
+                    $(".ido-selector").each(function () {
+                        if ($(this).prop("checked")) {
+                            val = $(this).attr("selected_id")
+                        }
+                    })
+                    if(val == null){
+                        alert("nothing selected")
+                    }else{
+                        idobjSelector.close()
+                        idObjcallback(val)
+                    }
+                })
+            }
+            setTimeout(function () {
+                idobjSelector.open()
+            },80)
+        }
+
 
         function eventListener() {
             let ignoreUnqualifiedPairs = $("#ignoreUnqualifiedPairs")
@@ -371,7 +419,7 @@
                 }
                 document.dataPost("/apply-template", {templateId: template,}, refresh)
             })
-            $("#volume-management").on('click','.create-volume',function(){
+            $("#volume-management").on('click', '.create-volume', function () {
                 let parents = $(this).parent().parent()
                 let cluster = parents.find(".create_volume_cluster_id").val()
                 let volume = parents.find(".create_volume_volume_name").val()
@@ -388,39 +436,65 @@
             })
             $("#delete-volume").click(function () {
                 let list = []
-                $(".volume-line.mdui-table-row-selected").each(function() {
+                $(".volume-line.mdui-table-row-selected").each(function () {
                     list[list.length] = {
                         "clusterId": $(this).attr("cluster-id"),
                         "volumeId": $(this).find(".volume-id").text()
                     }
                 })
-                if(list.length === 0){
+                if (list.length === 0) {
                     alert("No selected volume")
                     return
                 }
                 document.dataPost("/volume/delete", list, refresh)
             })
-            $("#initiator-management").on('click','.create-initiator',function () {
+            $("#initiator-management").on('click', '.create-initiator', function () {
                 let parents = $(this).parent().parent()
                 let name = parents.find(".create_initiator_initiator_name").val()
                 let iqn = parents.find(".create_initiator_initiator_iqn").val()
-                document.dataPost("/initiator/create",{
+                document.dataPost("/initiator/create", {
                     initiatorName: name,
                     iqn: iqn
-                },refresh)
+                }, refresh)
             })
             $("#delete-initiator").click(function () {
                 let list = []
-                $(".initiator-line.mdui-table-row-selected").each(function() {
+                $(".initiator-line.mdui-table-row-selected").each(function () {
                     list[list.length] = $(this).find(".initiator-id").text()
                 })
-                if(list.length === 0){
+                if (list.length === 0) {
                     alert("No selected initiator")
                     return
                 }
                 document.dataPost("/initiator/delete", list, refresh)
             })
+            $("#create-volume-access-group").click(function () {
+                idObjSelect("Cluster",vm.clusters,"clusterName","clusterId",function (clusterId) {
+                    mdui.prompt('Volume Access Group Name',
+                        function (name) {
+                            document.dataPost("/volume-access-group/create", {
+                                clusterId: clusterId,
+                                volumeAccessGroupName: name
+                            }, refresh)
+                        }
+                    );
+                })
+            })
+            let volumeAccessGroupManagement = $("#volume-access-group-management")
+            volumeAccessGroupManagement.on('click', '.add-volume', function () {
+                let gid = $(this).attr("volumeaccessgroupid")
+                idObjSelect("volume",vm.volumes[$(this).attr("clusterId")],"volumeName","volumeId",function (id) {
+
+                })
+            })
+            volumeAccessGroupManagement.on('click', '.add-initiator', function () {
+                let gid = $(this).attr("volumeaccessgroupid")
+                idObjSelect("initiator",vm.initiators,"iqn","initiatorId",function (id) {
+
+                })
+            })
         }
+
 
         $(window).ready(function () {
             vue()
@@ -559,6 +633,7 @@
     </li>
 </template>
 
+
 <template id="cluster-volume-template">
     <div class="mdui-table-fluid" style="margin-top: 15px">
         <table class="mdui-table mdui-table-selectable">
@@ -593,17 +668,20 @@
             <tr>
                 <td style="width: 200px;!important;padding: 0 0 0 20px;">
                     <label>
-                        <input class="mdui-textfield-input create_volume_volume_name" type="text" placeholder="Volume Name"/>
+                        <input class="mdui-textfield-input create_volume_volume_name" type="text"
+                               placeholder="Volume Name"/>
                     </label>
                 </td>
                 <td style="width: 200px;!important;padding: 0 0 0 5px;">
                     <label>
-                        <input class="mdui-textfield-input create_volume_volume_size" type="number" placeholder="Volume Size"/>
+                        <input class="mdui-textfield-input create_volume_volume_size" type="number"
+                               placeholder="Volume Size"/>
                     </label>
                 </td>
                 <td style="width: 200px;!important;padding: 0 0 0 5px;">
                     <label>
-                        <input class="mdui-textfield-input create_volume_block_size" type="number" placeholder="Block Size"/>
+                        <input class="mdui-textfield-input create_volume_block_size" type="number"
+                               placeholder="Block Size"/>
                     </label>
                 </td>
                 <input type="hidden" class="create_volume_cluster_id" v-bind:value="cluster_id">
@@ -624,7 +702,6 @@
     </div>
 </template>
 
-
 <template id="initiators-template">
     <div class="mdui-table-fluid" style="margin-top: 15px">
         <table class="mdui-table mdui-table-selectable">
@@ -636,7 +713,7 @@
             </tr>
             </thead>
             <tbody v-for="data in all_initiator_data">
-            <tr is="t-item" class="initiator-line" >
+            <tr is="t-item" class="initiator-line">
                 <td class="initiator-id">{{data.initiatorId}}</td>
                 <td>{{data.initiatorName}}</td>
                 <td>{{data.iqn}}</td>
@@ -649,12 +726,14 @@
             <tr>
                 <td style="width: 200px;!important;padding: 0 0 0 20px;">
                     <label>
-                        <input class="mdui-textfield-input create_initiator_initiator_name" type="text" placeholder="Initiator Name"/>
+                        <input class="mdui-textfield-input create_initiator_initiator_name" type="text"
+                               placeholder="Initiator Name"/>
                     </label>
                 </td>
                 <td style="width: 300px;!important;padding: 0 0 0 5px;">
                     <label>
-                        <input class="mdui-textfield-input create_initiator_initiator_iqn" type="text" placeholder="iqn.1994-05.com.redhat:19cc8955d1f"/>
+                        <input class="mdui-textfield-input create_initiator_initiator_iqn" type="text"
+                               placeholder="iqn.1994-05.com.redhat:19cc8955d1f"/>
                     </label>
                 </td>
                 <td style="float: right">
@@ -663,6 +742,47 @@
             </tr>
             </tbody>
         </table>
+    </div>
+</template>
+
+<template id="volume-access-group-template">
+    <div class="mdui-card" style="width: 450px; margin: 10px;">
+        <div class="mdui-card-media">
+
+            <div class="mdui-card-menu">
+                <button class="mdui-btn mdui-btn-icon mdui-text-color-white">
+                    <i class="mdui-icon material-icons">delete</i>
+                </button>
+            </div>
+        </div>
+
+        <div class="mdui-card-primary">
+            <div class="mdui-card-primary-title">{{data.volumeAccessGroupName}}</div>
+            <div class="mdui-card-primary-subtitle">groupId: {{data.volumeAccessGroupId}}<br>clusterId:
+                {{data.clusterId}}
+            </div>
+        </div>
+
+        <div class="mdui-card-content">
+            <ul class="mdui-list mdui-list-dense">
+                <li class="mdui-subheader-inset">Volumes ({{data.volumes.length}})</li>
+                <li class="mdui-list-item mdui-ripple" v-for="volume in data.volumes">
+                    <div class="mdui-list-item-content">{{volume.name}}</div>
+                    <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
+                </li>
+                <li class="mdui-subheader-inset">Initiator ({{data.initiators.length}})</li>
+                <li class="mdui-list-item mdui-ripple" v-for="initiator in data.initiators">
+                    <div class="mdui-list-item-content">{{initiator.iqn}}</div>
+                    <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mdui-card-actions">
+            <button class="mdui-btn mdui-ripple add-volume" v-bind:clusterId=data.clusterId v-bind:volumeAccessGroupId="data.volumeAccessGroupId">Add Volume</button>
+            <button class="mdui-btn mdui-ripple add-initiator" v-bind:volumeAccessGroupId="data.volumeAccessGroupId">Add Initiator</button>
+        </div>
+
     </div>
 </template>
 
@@ -716,6 +836,30 @@
     </div>
 </div>
 
+<div class="mdui-dialog" id="Id-object-selector">
+    <div class="mdui-dialog-content">
+        <div class="mdui-dialog-title">Select {{idObjSelector.name}}: </div>
+        <ul class="mdui-list">
+            <li class="mdui-list-item" v-for="item in idObjSelector.options">
+                <div class="mdui-list-item-content">
+                    <div class="mdui-list-item-title mdui-list-item-one-line" >{{item[idObjSelector.optionNameField] }}</div>
+                    <div class="mdui-list-item-text mdui-list-item-one-line">
+                        <div>{{item[idObjSelector.optionIdField] }}</div>
+                    </div>
+                </div>
+                <label class="mdui-radio">
+                    <input v-bind:selected_id='item[idObjSelector.optionIdField]' class="ido-selector" type="radio" name="ido-select"/>
+                    <i class="mdui-radio-icon"></i>
+                </label>
+            </li>
+        </ul>
+    </div>
+    <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" id="ido-selected">OK</button>
+    </div>
+</div>
+
+
 <div class="mdui-toolbar mdui-color-theme">
     <span style="height: 100%">
         <img src="/logo.svg" style="height: 85%;margin-top: 7.5%">
@@ -750,7 +894,7 @@
 
 <div id="disk-management" class="mdui-container-fluid">
     <div id="disk-list">
-        <cluster v-for="cluster in data" v-bind:cluster_id="cluster.clusterId" v-bind:hosts="cluster.hosts"></cluster>
+        <cluster v-for="cluster in hostsAndDisks" v-bind:cluster_id="cluster.clusterId" v-bind:hosts="cluster.hosts"></cluster>
     </div>
 
     <div id="disk-actions">
@@ -886,7 +1030,8 @@
 </div>
 
 <div id="volume-management" class="mdui-container-fluid">
-    <cluster-volume v-for="(value, key) in volumes" v-bind:cluster_id="key"  v-bind:test="key" v-bind:all_volume_data="value"></cluster-volume>
+    <cluster-volume v-for="(value, key) in volumes" v-bind:cluster_id="key" v-bind:test="key"
+                    v-bind:all_volume_data="value"></cluster-volume>
 
     <div class="mdui-fab-wrapper" id="deleteFab">
         <button class="mdui-fab mdui-ripple mdui-color-theme-accent" id="delete-volume">
@@ -909,281 +1054,14 @@
 
 <div id="volume-access-group-management" class="mdui-container-fluid">
     <div style="width: 100%; display: flex;!important; flex-direction: row;flex-wrap: wrap; align-items: flex-start; align-content: flex-start">
-        <div class="mdui-card" style="width: 450px; margin: 10px;">
-            <!-- 卡片的媒体内容，可以包含图片、视频等媒体内容，以及标题、副标题 -->
-            <div class="mdui-card-media">
+        <volume-access-group v-for="data in volumeAccessGroups" v-bind:data="data"></volume-access-group>
 
-                <!-- 卡片中可以包含一个或多个菜单按钮 -->
-                <div class="mdui-card-menu">
-                    <button class="mdui-btn mdui-btn-icon mdui-text-color-white">
-                        <i class="mdui-icon material-icons">delete</i>
-                    </button>
-                </div>
-            </div>
 
-            <!-- 卡片的标题和副标题 -->
-            <div class="mdui-card-primary">
-                <div class="mdui-card-primary-title">group name</div>
-                <div class="mdui-card-primary-subtitle">groupId:  1111-1111-1111-1111-11111111<br>clusterId: 1111-1111-1111-1111-11111111</div>
-            </div>
-
-            <!-- 卡片的内容 -->
-            <div class="mdui-card-content">
-                <ul class="mdui-list mdui-list-dense">
-                    <li class="mdui-subheader-inset">Volumes</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name1111111111111111111</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name222222</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-subheader-inset">Initiator</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name3333333333333333333</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name44</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- 卡片的按钮 -->
-            <div class="mdui-card-actions">
-                <button class="mdui-btn mdui-ripple">Add Volume</button>
-                <button class="mdui-btn mdui-ripple">Add Initiator</button>
-            </div>
-
+        <div class="mdui-fab-wrapper" id="createFeb">
+            <button class="mdui-fab mdui-ripple mdui-color-theme-accent" id="create-volume-access-group">
+                <i class="mdui-icon material-icons">add</i>
+            </button>
         </div>
-
-        <div class="mdui-card" style="width: 450px; margin: 10px;">
-            <!-- 卡片的媒体内容，可以包含图片、视频等媒体内容，以及标题、副标题 -->
-            <div class="mdui-card-media">
-
-                <!-- 卡片中可以包含一个或多个菜单按钮 -->
-                <div class="mdui-card-menu">
-                    <button class="mdui-btn mdui-btn-icon mdui-text-color-white">
-                        <i class="mdui-icon material-icons">delete</i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 卡片的标题和副标题 -->
-            <div class="mdui-card-primary">
-                <div class="mdui-card-primary-title">group name</div>
-                <div class="mdui-card-primary-subtitle">groupId:  1111-1111-1111-1111-11111111<br>clusterId: 1111-1111-1111-1111-11111111</div>
-            </div>
-
-            <!-- 卡片的内容 -->
-            <div class="mdui-card-content">
-                <ul class="mdui-list mdui-list-dense">
-                    <li class="mdui-subheader-inset">Volumes</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name1111111111111111111</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name222222</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-subheader-inset">Initiator</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name3333333333333333333</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name44</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name3333333333333333333</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name44</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name3333333333333333333</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name44</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name3333333333333333333</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name44</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-
-                </ul>
-            </div>
-
-            <!-- 卡片的按钮 -->
-            <div class="mdui-card-actions">
-                <button class="mdui-btn mdui-ripple">Add Volume</button>
-                <button class="mdui-btn mdui-ripple">Add Initiator</button>
-            </div>
-
-        </div>
-
-        <div class="mdui-card" style="width: 450px; margin: 10px;">
-            <!-- 卡片的媒体内容，可以包含图片、视频等媒体内容，以及标题、副标题 -->
-            <div class="mdui-card-media">
-
-                <!-- 卡片中可以包含一个或多个菜单按钮 -->
-                <div class="mdui-card-menu">
-                    <button class="mdui-btn mdui-btn-icon mdui-text-color-white">
-                        <i class="mdui-icon material-icons">delete</i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 卡片的标题和副标题 -->
-            <div class="mdui-card-primary">
-                <div class="mdui-card-primary-title">group name</div>
-                <div class="mdui-card-primary-subtitle">groupId:  1111-1111-1111-1111-11111111<br>clusterId: 1111-1111-1111-1111-11111111</div>
-            </div>
-
-            <!-- 卡片的内容 -->
-            <div class="mdui-card-content">
-                <ul class="mdui-list mdui-list-dense">
-                    <li class="mdui-subheader-inset">Volumes</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name1111111111111111111</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name222222</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-subheader-inset">Initiator</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name3333333333333333333</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name44</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- 卡片的按钮 -->
-            <div class="mdui-card-actions">
-                <button class="mdui-btn mdui-ripple">Add Volume</button>
-                <button class="mdui-btn mdui-ripple">Add Initiator</button>
-            </div>
-
-        </div>
-
-        <div class="mdui-card" style="width: 450px; margin: 10px;">
-            <!-- 卡片的媒体内容，可以包含图片、视频等媒体内容，以及标题、副标题 -->
-            <div class="mdui-card-media">
-
-                <!-- 卡片中可以包含一个或多个菜单按钮 -->
-                <div class="mdui-card-menu">
-                    <button class="mdui-btn mdui-btn-icon mdui-text-color-white">
-                        <i class="mdui-icon material-icons">delete</i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 卡片的标题和副标题 -->
-            <div class="mdui-card-primary">
-                <div class="mdui-card-primary-title">group name</div>
-                <div class="mdui-card-primary-subtitle">groupId:  1111-1111-1111-1111-11111111<br>clusterId: 1111-1111-1111-1111-11111111</div>
-            </div>
-
-            <!-- 卡片的内容 -->
-            <div class="mdui-card-content">
-                <ul class="mdui-list mdui-list-dense">
-                    <li class="mdui-subheader-inset">Volumes</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name1111111111111111111</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name222222</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-subheader-inset">Initiator</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name3333333333333333333</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name44</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- 卡片的按钮 -->
-            <div class="mdui-card-actions">
-                <button class="mdui-btn mdui-ripple">Add Volume</button>
-                <button class="mdui-btn mdui-ripple">Add Initiator</button>
-            </div>
-
-        </div>
-
-        <div class="mdui-card" style="width: 450px; margin: 10px;">
-            <!-- 卡片的媒体内容，可以包含图片、视频等媒体内容，以及标题、副标题 -->
-            <div class="mdui-card-media">
-
-                <!-- 卡片中可以包含一个或多个菜单按钮 -->
-                <div class="mdui-card-menu">
-                    <button class="mdui-btn mdui-btn-icon mdui-text-color-white">
-                        <i class="mdui-icon material-icons">delete</i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 卡片的标题和副标题 -->
-            <div class="mdui-card-primary">
-                <div class="mdui-card-primary-title">group name</div>
-                <div class="mdui-card-primary-subtitle">groupId:  1111-1111-1111-1111-11111111<br>clusterId: 1111-1111-1111-1111-11111111</div>
-            </div>
-
-            <!-- 卡片的内容 -->
-            <div class="mdui-card-content">
-                <ul class="mdui-list mdui-list-dense">
-                    <li class="mdui-subheader-inset">Volumes</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name1111111111111111111</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name222222</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-subheader-inset">Initiator</li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name3333333333333333333</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                    <li class="mdui-list-item mdui-ripple">
-                        <div class="mdui-list-item-content">Name44</div>
-                        <i class="mdui-list-item-icon mdui-icon material-icons">delete</i>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- 卡片的按钮 -->
-            <div class="mdui-card-actions">
-                <button class="mdui-btn mdui-ripple">Add Volume</button>
-                <button class="mdui-btn mdui-ripple">Add Initiator</button>
-            </div>
-
-        </div>
-
     </div>
 </div>
 

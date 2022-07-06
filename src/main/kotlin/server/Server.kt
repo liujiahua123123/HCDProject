@@ -40,6 +40,7 @@ object Server {
                 diskRoute()
                 globalRoute()
                 initiatorRoute()
+                volumeAccessGroupRouting()
             }
         }.start(wait = true)
     }

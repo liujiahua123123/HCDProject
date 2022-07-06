@@ -17,6 +17,9 @@ import operation.initiator.ListInitiatorOperation
 import operation.initiator.ListInitiatorReq
 import operation.volume.ListVolumeOperation
 import operation.volume.ListVolumeReq
+import operation.volumeaccessgroup.CreateVolumeAccessGroupOperation
+import operation.volumeaccessgroup.ListVolumeAccessGroupOperation
+import operation.volumeaccessgroup.ListVolumeAccessGroupReq
 import server.handleDataPost
 import server.ifFromPortalPage
 import server.ifLogin
@@ -44,7 +47,7 @@ fun Routing.portalRoute(){
         ifFromPortalPage { user, portal ->
             call.respondTraceable(OperationExecutor.addExecutorTask<PortalRefreshResult>{
                 httpOperationScope(portal){
-                    updateProgress(0,4,"Synchronizing Data")
+                    updateProgress(0,5,"Synchronizing Data")
                     val clusters = create<ListClusterOperation>().invoke(ListClusterReq()).data
 
                     val context = CoroutineScope(Job())
@@ -125,14 +128,23 @@ fun Routing.portalRoute(){
                         create<ListInitiatorOperation>().invoke(ListInitiatorReq()).data.also {
                             updateProgress("Synchronizing Data")
                         }
+                    }
 
+                    val volumeAccessGroup = context.async {
+                        clusters.map {
+                            create<ListVolumeAccessGroupOperation>().invoke(ListVolumeAccessGroupReq(it.clusterId)).data
+                        }.flatten().also {
+                            updateProgress("Synchronizing Data")
+                        }
                     }
 
                     PortalRefreshResult(
-                        hosts=hostsResult.await(),
+                        clusters=clusters,
+                        hostsAndDisks=hostsResult.await(),
                         volumes=volumesResult.await(),
                         templates=templateResult.await(),
-                        initiators=initiators.await()
+                        initiators=initiators.await(),
+                        volumeAccessGroups=volumeAccessGroup.await()
                     )
                 }
             })
@@ -150,8 +162,10 @@ data class TemplateDigest(
 
 @kotlinx.serialization.Serializable
 data class PortalRefreshResult(
-    val hosts: List<ClusterWithHosts>,
+    val clusters: List<ClusterInfo>,
+    val hostsAndDisks: List<ClusterWithHosts>,
     val volumes: Map<String, List<VolumeInfo>>,
     val templates: List<TemplateDigest>,
-    val initiators: List<Initiator>
+    val initiators: List<Initiator>,
+    val volumeAccessGroups: List<VolumeAccessGroup>
 )

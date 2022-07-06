@@ -4,6 +4,11 @@ import kotlinx.serialization.Serializable
 import operation.cluster.CreateClusterInfo
 import java.util.StringJoiner
 
+@Serializable
+data class IdObject(
+    val id: String,
+    val name: String = "",
+)
 
 @Serializable
 data class ClusterInfo(
@@ -74,3 +79,11 @@ data class Initiator(
 )
 
 
+@Serializable
+data class VolumeAccessGroup(
+    val volumeAccessGroupId: String,
+    val volumeAccessGroupName: String,
+    val clusterId: String,
+    val initiators: List<IdObject>,
+    val volumes: List<IdObject>,
+)
