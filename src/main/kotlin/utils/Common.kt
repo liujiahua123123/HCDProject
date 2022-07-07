@@ -8,6 +8,7 @@ import java.util.StringJoiner
 data class IdObject(
     val id: String,
     val name: String = "",
+    val iqn: String = "",
 )
 
 @Serializable
