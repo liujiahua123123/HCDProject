@@ -531,6 +531,12 @@
                     clusterId: clusterId
                 }, refresh)
             })
+            $("#select-template-dialog").on('click','.delete-template',function () {
+                let tid = $(this).attr("template-id")
+                document.dataPost("/delete-template", {
+                    templateId: tid
+                }, refresh)
+            })
         }
 
 
@@ -668,6 +674,7 @@
             <input v-bind:template-id="template_id" class="template-selector" type="radio" name="template-select"/>
             <i class="mdui-radio-icon"></i>
         </label>
+        <i class="mdui-icon material-icons delete-template"  v-bind:template-id="template_id">delete</i>
     </li>
 </template>
 

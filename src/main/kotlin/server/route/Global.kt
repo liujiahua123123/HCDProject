@@ -1,8 +1,8 @@
 package server.route
 
+import io.ktor.html.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
@@ -21,6 +21,7 @@ import server.*
 import ssh.HCDSshClient
 import utils.ClusterTemplate
 import utils.OperationExecutor
+import utils.dataScope
 import utils.getAllData
 
 fun Routing.globalRoute() {
@@ -81,9 +82,19 @@ fun Routing.globalRoute() {
         }
     }
 
+    handleDataPost("/delete-template"){
+        ifFromPortalPage { user, portal ->
+            val request = call.readDataRequest<TemplateRequest>()
+            user.dataScope<ClusterTemplate> {
+                it.removeIf { e -> e.id == request.templateId }
+            }
+            call.respondOK()
+        }
+    }
+
     handleDataPost("/apply-template") {
         ifFromPortalPage { user, portal ->
-            val request = call.readDataRequest<ApplyTemplateRequest>()
+            val request = call.readDataRequest<TemplateRequest>()
             val templateId = request.templateId
             call.respondTraceable(OperationExecutor.addExecutorTask<Unit> {
                 httpOperationScope(portal) {
@@ -175,6 +186,7 @@ fun Routing.globalRoute() {
 
 
 @kotlinx.serialization.Serializable
-data class ApplyTemplateRequest(
+data class TemplateRequest(
     val templateId: String
 )
+

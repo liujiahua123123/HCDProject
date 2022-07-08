@@ -19,7 +19,6 @@ data class LoginResp(
     @SerialName("expires_in") val expire: Long
 )
 
-
 class LoginOperation : HttpOperation<LoginReq, LoginResp>(
     method = Requester.Method.FORM_POST,
     path = "/oauth/token"
