@@ -74,6 +74,12 @@ class Job<T>(var totalStep: Int, val holder: ResultHolder<T>) : Traceable<T> {
         }
     }
 
+    suspend fun updateProgressDescription(name: String) {
+        mutex.withLock {
+            this.currStepName = name
+        }
+    }
+
     suspend fun updateProgress(name: String) = updateProgress(currStep + 1, totalStep, name)
 
     override fun getResult(): ResultHolder<T> {

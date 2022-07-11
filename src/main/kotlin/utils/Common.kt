@@ -62,7 +62,8 @@ data class VolumeInfo(
     val accessLevel: String,
     val status: String,
     val compressionAlgorithm: String,
-    val iscsiTarget: IscsiTarget
+    val iscsiTarget: IscsiTarget,
+    val type: String,
 )
 
 @Serializable

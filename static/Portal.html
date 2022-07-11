@@ -401,7 +401,7 @@
                 cluster = cluster[0]
                 mdui.prompt('Name of the template (save name will override)',
                     function (value) {
-                        document.dataPost("/cluster/save", {
+                        document.dataPost("/save-template", {
                             clusterId: cluster,
                             name: value
                         }, function (_a, _b) {
@@ -663,7 +663,9 @@
 <template id="cluster-template-template">
     <li class="mdui-list-item">
         <div class="mdui-list-item-content">
-            <div class="mdui-list-item-title mdui-list-item-one-line">{{ name }}</div>
+            <div class="mdui-list-item-title mdui-list-item-one-line">{{ name }}
+                <i class="mdui-icon material-icons delete-template" style="margin-right: 10px" v-bind:template-id="template_id">delete</i>
+            </div>
             <div class="mdui-list-item-text mdui-list-item-three-line">
                 <div v-for="content in info.split('\n')">
                     {{content}}
@@ -674,7 +676,6 @@
             <input v-bind:template-id="template_id" class="template-selector" type="radio" name="template-select"/>
             <i class="mdui-radio-icon"></i>
         </label>
-        <i class="mdui-icon material-icons delete-template"  v-bind:template-id="template_id">delete</i>
     </li>
 </template>
 

@@ -124,7 +124,10 @@ data class ClusterTemplate(
     val templateName: String,
     val portal: String,
     val creator: CreateClusterInfo,
-    val hosts: Map<String, HostTemplate>
+    val hosts: Map<String, HostTemplate>,
+    val initiators: List<InitiatorTemplate>,
+    val volumes: List<VolumeTemplate>,
+    val volumeAccessGroups: List<VolumeAccessGroupTemplate>
 ): UserData()
 
 @kotlinx.serialization.Serializable
@@ -133,9 +136,32 @@ data class HostTemplate(
 )
 
 @kotlinx.serialization.Serializable
+data class InitiatorTemplate(
+    val name: String,
+    val iqn: String,
+)
+
+@kotlinx.serialization.Serializable
 data class DiskTemplate(
     val tags: List<String>
 )
+
+
+@kotlinx.serialization.Serializable
+data class VolumeTemplate(
+    val volumeName: String,
+    val volumeSize: Long,
+    val blockSize: Long,
+    val type: String
+)
+
+@kotlinx.serialization.Serializable
+data class VolumeAccessGroupTemplate(
+    val name: String,
+    val volumes: List<String>,
+    val initiators: List<String>
+)
+
 
 object UserDataManagement {
     val lock = Mutex()
