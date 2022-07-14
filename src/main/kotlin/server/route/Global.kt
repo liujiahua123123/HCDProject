@@ -69,7 +69,7 @@ fun Routing.globalRoute() {
     handleDataPost("/save-config"){
         val req = call.readDataRequest<ConfigReq>()
         ifLogin { user ->
-            user.dataScope<ClusterTemplate>() {
+            user.dataScope<ClusterTemplate> {
                 it.removeIf { it.id == req.id }
                 it.add(FileSerializer.decodeFromString(req.content))
                 true

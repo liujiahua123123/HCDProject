@@ -27,14 +27,14 @@ import server.respondTraceable
 import utils.*
 import java.util.*
 
-fun Routing.portalRoute(){
+fun Routing.portalRoute() {
     get("/portal/{portal}") {
         ifLogin {
             if (call.parameters.contains("portal")) {
                 val portal = call.parameters["portal"]!!
-                if(PortalAccessManagement.canAccess(it, portal)){
+                if (PortalAccessManagement.canAccess(it, portal)) {
                     call.respondFile(STATIC_FILES.findFile("Portal.html"))
-                }else{
+                } else {
                     call.respondRedirect("/")
                 }
             } else {
@@ -43,11 +43,11 @@ fun Routing.portalRoute(){
         }
     }
 
-    handleDataPost("/portal/refresh"){
+    handleDataPost("/portal/refresh") {
         ifFromPortalPage { user, portal ->
-            call.respondTraceable(OperationExecutor.addExecutorTask<PortalRefreshResult>{
-                httpOperationScope(portal){
-                    updateProgress(0,5,"Synchronizing Data")
+            call.respondTraceable(OperationExecutor.addExecutorTask<PortalRefreshResult> {
+                httpOperationScope(portal) {
+                    updateProgress(0, 5, "Synchronizing Data")
                     val clusters = create<ListClusterOperation>().invoke(ListClusterReq()).data
 
                     val context = CoroutineScope(Job())
@@ -82,7 +82,7 @@ fun Routing.portalRoute(){
                         }
                     }
 
-                    val volumesResult = context.async{
+                    val volumesResult = context.async {
                         val volumesResult = mutableMapOf<String, List<VolumeInfo>>()
 
                         clusters.forEach {
@@ -144,12 +144,12 @@ fun Routing.portalRoute(){
                     }
 
                     PortalRefreshResult(
-                        clusters=clusters,
-                        hostsAndDisks=hostsResult.await(),
-                        volumes=volumesResult.await(),
-                        templates=templateResult.await(),
-                        initiators=initiators.await(),
-                        volumeAccessGroups=volumeAccessGroup.await()
+                        clusters = clusters,
+                        hostsAndDisks = hostsResult.await(),
+                        volumes = volumesResult.await(),
+                        templates = templateResult.await(),
+                        initiators = initiators.await(),
+                        volumeAccessGroups = volumeAccessGroup.await()
                     )
                 }
             })

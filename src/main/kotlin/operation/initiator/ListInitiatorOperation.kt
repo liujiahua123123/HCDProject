@@ -5,7 +5,7 @@ import operation.request.Requester
 import utils.Initiator
 
 @kotlinx.serialization.Serializable
-class ListInitiatorReq()
+class ListInitiatorReq
 
 
 @kotlinx.serialization.Serializable

@@ -11,71 +11,79 @@ import server.readDataRequest
 import server.respondOK
 
 fun Routing.volumeAccessGroupRouting() {
-    handleDataPost("/volume-access-group/create"){
+    handleDataPost("/volume-access-group/create") {
         ifFromPortalPage { user, portal ->
             val req = call.readDataRequest<CreateVolumeAccessGroupReq>()
-            httpOperationScope(portal){
+            httpOperationScope(portal) {
                 create<CreateVolumeAccessGroupOperation>().invoke(req)
                 call.respondOK()
             }
         }
     }
-    handleDataPost("/volume-access-group/add-initiator"){
+    handleDataPost("/volume-access-group/add-initiator") {
         ifFromPortalPage { _, portal ->
             val req = call.readDataRequest<UpdateVolumeAccessGroupRequest>()
-            httpOperationScope(portal){
-                create<AddVolumeAccessGroupInitiatorOperation>().invoke(AddVolumeAccessGroupInitiatorReq(
-                    volumeAccessGroupId = req.volumeAccessGroupId,
-                    clusterId = req.clusterId,
-                    initiatorId = req.id
-                ))
+            httpOperationScope(portal) {
+                create<AddVolumeAccessGroupInitiatorOperation>().invoke(
+                    AddVolumeAccessGroupInitiatorReq(
+                        volumeAccessGroupId = req.volumeAccessGroupId,
+                        clusterId = req.clusterId,
+                        initiatorId = req.id
+                    )
+                )
                 call.respondOK()
             }
         }
     }
-    handleDataPost("/volume-access-group/add-volume"){
+    handleDataPost("/volume-access-group/add-volume") {
         ifFromPortalPage { _, portal ->
             val req = call.readDataRequest<UpdateVolumeAccessGroupRequest>()
-            httpOperationScope(portal){
-                create<AddVolumeAccessGroupVolumeOperation>().invoke(AddVolumeAccessGroupVolumeReq(
-                    volumeAccessGroupId = req.volumeAccessGroupId,
-                    clusterId = req.clusterId,
-                    volumeId = req.id
-                ))
+            httpOperationScope(portal) {
+                create<AddVolumeAccessGroupVolumeOperation>().invoke(
+                    AddVolumeAccessGroupVolumeReq(
+                        volumeAccessGroupId = req.volumeAccessGroupId,
+                        clusterId = req.clusterId,
+                        volumeId = req.id
+                    )
+                )
                 call.respondOK()
             }
         }
     }
-    handleDataPost("/volume-access-group/remove-volume"){
+    handleDataPost("/volume-access-group/remove-volume") {
         ifFromPortalPage { _, portal ->
             val req = call.readDataRequest<UpdateVolumeAccessGroupRequest>()
-            httpOperationScope(portal){
-                create<RemoveVolumeAccessGroupVolumeOperation>().invoke(RemoveVolumeAccessGroupVolumeReq(
-                    volumeAccessGroupId = req.volumeAccessGroupId,
-                    clusterId = req.clusterId,
-                    volumeId = req.id
-                ))
+            httpOperationScope(portal) {
+                create<RemoveVolumeAccessGroupVolumeOperation>().invoke(
+                    RemoveVolumeAccessGroupVolumeReq(
+                        volumeAccessGroupId = req.volumeAccessGroupId,
+                        clusterId = req.clusterId,
+                        volumeId = req.id
+                    )
+                )
                 call.respondOK()
             }
         }
     }
-    handleDataPost("/volume-access-group/remove-initiator"){
-        ifFromPortalPage{ _, portal ->
+    handleDataPost("/volume-access-group/remove-initiator") {
+        ifFromPortalPage { _, portal ->
             val req = call.readDataRequest<UpdateVolumeAccessGroupRequest>()
-            httpOperationScope(portal){
-                create<RemoveVolumeAccessGroupInitiatorOperation>().invoke(RemoveVolumeAccessGroupInitiatorReq(
-                    volumeAccessGroupId = req.volumeAccessGroupId,
-                    clusterId = req.clusterId,
-                    initiatorId = req.id
-                ))
+            httpOperationScope(portal) {
+                create<RemoveVolumeAccessGroupInitiatorOperation>().invoke(
+                    RemoveVolumeAccessGroupInitiatorReq(
+                        volumeAccessGroupId = req.volumeAccessGroupId,
+                        clusterId = req.clusterId,
+                        initiatorId = req.id
+                    )
+                )
                 call.respondOK()
             }
         }
     }
-    handleDataPost("/volume-access-group/delete"){
-        ifFromPortalPage{ _, portal ->
+    handleDataPost("/volume-access-group/delete") {
+        ifFromPortalPage { _, portal ->
             val req = call.readDataRequest<DeleteVolumeAccessGroupReq>()
-            httpOperationScope(portal){
+            httpOperationScope(portal) {
                 create<DeleteVolumeAccessGroupOperation>().invoke(req)
             }
             call.respondOK()

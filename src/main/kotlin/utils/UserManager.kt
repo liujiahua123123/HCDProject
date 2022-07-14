@@ -52,7 +52,7 @@ object UserManager {
     private val lock = Mutex()
 
     private val salt = createUuid4()
-    private const val ACCESS_KEY_VALID = 1000 * 60 * 60 * 24 * 7;//7 days
+    private const val ACCESS_KEY_VALID = 1000 * 60 * 60 * 24 * 7//7 days
 
     const val COOKIE_TOKEN = "_user_token"
     const val COOKIE_USERNAME = "_user"

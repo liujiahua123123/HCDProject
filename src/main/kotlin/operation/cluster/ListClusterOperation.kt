@@ -6,7 +6,7 @@ import utils.ClusterInfo
 
 
 @kotlinx.serialization.Serializable
-class ListClusterReq()
+class ListClusterReq
 
 @kotlinx.serialization.Serializable
 data class ListClusterResp(

@@ -16,7 +16,7 @@ data class CreateVolumeAccessGroupReq(
 @kotlinx.serialization.Serializable
 class CreateVolumeAccessGroupResp
 
-class CreateVolumeAccessGroupOperation():AuthedHttpOperation<CreateVolumeAccessGroupReq,CreateVolumeAccessGroupResp>(
+class CreateVolumeAccessGroupOperation :AuthedHttpOperation<CreateVolumeAccessGroupReq,CreateVolumeAccessGroupResp>(
     method = Requester.Method.POST,
     path = "/v1/volume-access-groups",
 ) {

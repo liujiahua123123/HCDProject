@@ -45,7 +45,7 @@ class ResponseBodyException(override val message: String):Exception(message)
 class HttpStatusException(override val message: String):Exception(message)
 
 
-enum class LogColorOutputType(){
+enum class LogColorOutputType {
     LinuxCode,
     HTML,
     NOTHING
@@ -196,4 +196,4 @@ inline fun <reified T : Any> File.deserialize(defaultCreator:() -> T): T{
     return FileSerializer.decodeFromString(text)
 }
 
-fun String.akamaiHash():String = "" + this.map { it.toInt() }.filter { it in 49..127 }.sum()
+fun String.akamaiHash():String = "" + this.map { it.code }.filter { it in 49..127 }.sum()

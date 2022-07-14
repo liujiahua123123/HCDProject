@@ -9,43 +9,43 @@ import operation.login.LoginResp
 import server.*
 import utils.*
 
-fun Routing.userRoute(){
-    get("/login"){
+fun Routing.userRoute() {
+    get("/login") {
         call.respondFile(STATIC_FILES.findFile("Login.html"))
     }
 
-    handleDataPost("/login"){
+    handleDataPost("/login") {
         val credential = call.readDataRequest<LoginRequest>()
-        val user = UserManager.login(credential.username,credential.password)?: userInputError("Username/Password mismatched")
+        val user = UserManager.login(credential.username, credential.password) ?: userInputError("Username/Password mismatched")
         call.bindUser(user)
         call.respondOK()
     }
 
-    handleDataPost("/register"){
+    handleDataPost("/register") {
         val credential = call.readDataRequest<LoginRequest>()
-        val user = UserManager.addUser(credential.username,credential.password)?: userInputError("Username already exists")
+        val user = UserManager.addUser(credential.username, credential.password) ?: userInputError("Username already exists")
         call.bindUser(user)
         call.respondOK()
     }
 
-    get("/"){
+    get("/") {
         ifLogin {
             call.respondFile(STATIC_FILES.findFile("Home.html"))
         }
     }
 
-    handleDataPost("/portal/history"){
-        ifLogin {user ->
+    handleDataPost("/portal/history") {
+        ifLogin { user ->
             call.respondOK(user.getAllData<ConnectionHistory>())
         }
     }
 
-    handleDataPost("/portal/connect"){
-        ifLogin {user ->
+    handleDataPost("/portal/connect") {
+        ifLogin { user ->
             val data = call.readDataRequest<ConnectPortalRequest>()
 
-            call.respondTraceable(OperationExecutor.addExecutorTask<LoginResp>{
-                updateProgress(1,3, "Exchanging Token")
+            call.respondTraceable(OperationExecutor.addExecutorTask<LoginResp> {
+                updateProgress(1, 3, "Exchanging Token")
                 val resp = LoginOperation().apply {
                     this.portal = data.portal
                 }.invoke(
@@ -57,14 +57,16 @@ fun Routing.userRoute(){
                 updateProgress("Saving Credentials")
 
                 user.dataScope<ConnectionHistory> {
-                    it.removeIf { ele -> ele.portal == data.portal}
-                    it.add(0,ConnectionHistory(
-                        data.portal,data.username,data.password
-                    ))
+                    it.removeIf { ele -> ele.portal == data.portal }
+                    it.add(
+                        0, ConnectionHistory(
+                            data.portal, data.username, data.password
+                        )
+                    )
                     true
                 }
 
-                KeyExchangeService.register(data.portal,data.username,data.password,resp)
+                KeyExchangeService.register(data.portal, data.username, data.password, resp)
                 PortalAccessManagement.add(user, data.portal)
                 resp
             })

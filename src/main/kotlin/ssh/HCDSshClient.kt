@@ -71,39 +71,4 @@ class HCDSshClient(
             }
     }
 
-
 }
-
-suspend fun main(){
-    val list = mutableListOf(
-        HCDSshClient("HCD51","hcd51"),
-        HCDSshClient("HCD52","hcd52"),
-        HCDSshClient("HCD53","hcd53"),
-    )
-
-    list.forEach {
-        it.execute("sudo systemctl stop hcdmgmt")
-        it.execute("sudo systemctl stop hcdadmin")
-    }
-
-    delay(3000)
-    list.forEach {
-        it.execute("sudo /usr/share/hcdinstall/scripts/db_purge.sh")
-    }
-
-    delay(5000)
-    supervisorScope {
-        list.forEach {
-            launch {
-                it.execute("sudo /usr/share/hcdinstall/scripts/db_config.sh")
-            }
-        }
-    }
-
-    delay(5000)
-    list.forEach {
-        it.execute("sudo systemctl start hcdmgmt")
-        it.execute("sudo systemctl start hcdadmin")
-    }
-}
-

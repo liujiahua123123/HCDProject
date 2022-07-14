@@ -8,19 +8,19 @@ import utils.Job
 import utils.OperationExecutor
 import utils.STATIC_FILES
 
-fun Routing.commonRoute(){
+fun Routing.commonRoute() {
 
-    get("/utils.js"){
+    get("/utils.js") {
         call.respondFile(STATIC_FILES.findFile("utils.js"))
     }
-    get("/logo.svg"){
+    get("/logo.svg") {
         call.respondFile(STATIC_FILES.findFile("logo.svg"))
     }
 
-    handleDataPost("/trace"){
+    handleDataPost("/trace") {
         ifLogin {
             val data = call.readDataRequest<TraceRequest>()
-            val job: Job<*> = OperationExecutor.get(data.traceId)?: userInputError("Task Id Not Found")
+            val job: Job<*> = OperationExecutor.get(data.traceId) ?: userInputError("Task Id Not Found")
             call.respondTraceable(job)
         }
     }

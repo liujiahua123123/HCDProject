@@ -11,7 +11,7 @@ data class DeleteVolumeReq(
 )
 
 @kotlinx.serialization.Serializable
-class DeleteVolumeResp()
+class DeleteVolumeResp
 
 
 class DeleteVolumeOperation:AuthedHttpOperation<DeleteVolumeReq,DeleteVolumeResp>(

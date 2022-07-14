@@ -22,7 +22,7 @@ import java.util.Collections
 fun Routing.hostRoute() {
     handleDataPost("/host/list") {
         ifFromPortalPage { _, portal ->
-            call.respondTraceable(OperationExecutor.addExecutorTask<List<HostWithDisks>>{
+            call.respondTraceable(OperationExecutor.addExecutorTask<List<HostWithDisks>> {
                 httpOperationScope(portal) {
                     updateProgress("Listing Hosts")
 

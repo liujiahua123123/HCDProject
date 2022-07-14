@@ -20,15 +20,15 @@ import utils.VolumeInfo
 data class CreateMultiVolumeRequest(val input: CreateVolumeReq, val count: Int)
 
 fun Routing.volumeRoute() {
-    handleDataPost("/volume/create"){
+    handleDataPost("/volume/create") {
         ifFromPortalPage { user, portal ->
             val req = call.readDataRequest<CreateVolumeReq>()
             call.respondTraceable(OperationExecutor.addExecutorTask<Unit> {
                 httpOperationScope(portal) {
-                    updateProgress(1,2,"Creating volume")
+                    updateProgress(1, 2, "Creating volume")
                     val task = create<CreateVolumeOperation>().invoke(req).taskId
                     updateProgress("Waiting to complete")
-                    while (create<TraceTaskOperation>().invoke(TraceTaskReq(task)).progress != 100){
+                    while (create<TraceTaskOperation>().invoke(TraceTaskReq(task)).progress != 100) {
                         delay(500)
                     }
                 }
@@ -36,22 +36,24 @@ fun Routing.volumeRoute() {
         }
     }
 
-    handleDataPost("/volume/create-multi"){
+    handleDataPost("/volume/create-multi") {
         ifFromPortalPage { user, portal ->
             val req = call.readDataRequest<CreateMultiVolumeRequest>()
 
-            if(!req.input.volumeName.contains("{num}")){
+            if (!req.input.volumeName.contains("{num}")) {
                 userInputError("Must have {num} in name field for multi-create")
             }
 
             call.respondTraceable(OperationExecutor.addExecutorTask<Unit> {
                 httpOperationScope(portal) {
-                    updateProgress(0,req.count,"Creating volume")
+                    updateProgress(0, req.count, "Creating volume")
 
                     repeat(req.count) {
-                        val task = create<CreateVolumeOperation>().invoke(req.input.copy(
-                            volumeName = req.input.volumeName.replace("{num}", "$it")
-                        )).taskId
+                        val task = create<CreateVolumeOperation>().invoke(
+                            req.input.copy(
+                                volumeName = req.input.volumeName.replace("{num}", "$it")
+                            )
+                        ).taskId
                         updateProgress("Creating..")
                         while (create<TraceTaskOperation>().invoke(TraceTaskReq(task)).progress != 100) {
                             delay(500)
@@ -62,20 +64,19 @@ fun Routing.volumeRoute() {
         }
     }
 
-    handleDataPost("/volume/delete"){
-        ifFromPortalPage {user, portal ->
+    handleDataPost("/volume/delete") {
+        ifFromPortalPage { user, portal ->
             val req = call.readDataRequest<List<SelectedVolume>>()
             call.respondTraceable(OperationExecutor.addExecutorTask<Unit> {
                 httpOperationScope(portal) {
-                    for (i in req.indices){
-                        updateProgress(i,req.size,"Deleting volume " + req[i].volumeId)
-                        create<DeleteVolumeOperation>().invoke(DeleteVolumeReq(req[i].volumeId,req[i].clusterId))
+                    for (i in req.indices) {
+                        updateProgress(i, req.size, "Deleting volume " + req[i].volumeId)
+                        create<DeleteVolumeOperation>().invoke(DeleteVolumeReq(req[i].volumeId, req[i].clusterId))
                     }
                 }
             })
         }
     }
-
 
 
 }

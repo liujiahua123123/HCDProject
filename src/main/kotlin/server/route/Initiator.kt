@@ -9,22 +9,22 @@ import operation.initiator.DeleteInitiatorReq
 import server.*
 import utils.OperationExecutor
 
-fun Routing.initiatorRoute(){
-    handleDataPost("/initiator/create"){
+fun Routing.initiatorRoute() {
+    handleDataPost("/initiator/create") {
         ifFromPortalPage { user, portal ->
-            httpOperationScope(portal){
+            httpOperationScope(portal) {
                 create<CreateInitiatorOperation>().invoke(call.readDataRequest())
             }
             call.respondOK()
         }
     }
 
-    handleDataPost("/initiator/delete"){
+    handleDataPost("/initiator/delete") {
         val req = call.readDataRequest<List<String>>()
-        ifFromPortalPage{ user, portal ->
+        ifFromPortalPage { user, portal ->
             call.respondTraceable(OperationExecutor.addExecutorTask<Unit> {
-                updateProgress(0,req.size,"Deleting initiators")
-                httpOperationScope(portal){
+                updateProgress(0, req.size, "Deleting initiators")
+                httpOperationScope(portal) {
                     req.forEach {
                         updateProgress("Deleting initiator $it")
                         create<DeleteInitiatorOperation>().invoke(DeleteInitiatorReq(it))
