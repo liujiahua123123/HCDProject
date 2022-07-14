@@ -113,8 +113,13 @@ fun Routing.portalRoute(){
                                         append("Involve Hosts: ")
                                         append(it.hosts.keys.joinToString(","))
                                         append("\n")
-                                        append("Involve Volumes: ")
-                                        append("TODO")
+                                        append("Involve ")
+                                        append(it.volumes.size)
+                                        append(" volumes, ")
+                                        append(it.volumeAccessGroups.size)
+                                        append(" volume access groups, ")
+                                        append(it.initiators.size)
+                                        append(" initiators")
                                     }
                                 ))
                             }
