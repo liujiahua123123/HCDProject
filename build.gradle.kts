@@ -57,5 +57,5 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    mainClass.set("Index")
+    mainClass.set("JVMIndex")
 }

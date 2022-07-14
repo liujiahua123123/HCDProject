@@ -47,11 +47,7 @@ fun setup(){
     HttpsURLConnection.setDefaultHostnameVerifier { _, _ -> true }
 }
 
-suspend fun main(){
-
-
-
+suspend fun ktmain(){
     setup()
     Server.start()
-
 }
