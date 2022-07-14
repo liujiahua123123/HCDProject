@@ -2,10 +2,12 @@ package server.route
 
 import io.ktor.html.*
 import io.ktor.server.application.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import kotlinx.serialization.decodeFromString
 import operation.HttpOperationBuilder
 import operation.cluster.*
 import operation.disk.DiskAddTagOperation
@@ -34,7 +36,49 @@ import server.trace.Traceable
 import ssh.HCDSshClient
 import utils.*
 
+
+@kotlinx.serialization.Serializable
+data class ConfigReq(
+    val id: String,
+    val content: String = ""
+)
+
 fun Routing.globalRoute() {
+
+    get("/edit/{id}"){
+        ifLogin {
+            call.respondFile(STATIC_FILES.findFile("Editor.html"))
+        }
+    }
+
+    handleDataPost("/get-config"){
+        val req = call.readDataRequest<ConfigReq>()
+        ifLogin { user ->
+            val d = user.getAllData<ClusterTemplate>().first { it.id == req.id }
+            call.respondOK(
+                """
+                    # ID is used to identify this template, do not make changes
+                    # Remember to click save button on the right conner 
+                """.trimIndent() +
+                "       \n" +
+                d.serialize(FileSerializer)
+            )
+        }
+    }
+
+    handleDataPost("/save-config"){
+        val req = call.readDataRequest<ConfigReq>()
+        ifLogin { user ->
+            user.dataScope<ClusterTemplate>() {
+                it.removeIf { it.id == req.id }
+                it.add(FileSerializer.decodeFromString(req.content))
+                true
+            }
+            call.respondOK()
+        }
+    }
+
+
 
     handleDataPost("/purge-db") {
         ifFromPortalPage { user, portal ->
@@ -157,7 +201,9 @@ fun Routing.globalRoute() {
                                     volumeName = inner.volumeName,
                                     volumeSize = inner.volumeSize,
                                     type = inner.type,
-                                    blockSize = inner.blockSize
+                                    blockSize = inner.blockSize,
+                                    enableDedup = inner.enableDedup,
+                                    compressionAlgorithm = inner.compressionAlgorithm,
                                 )
                             },
                             volumeAccessGroups = groups.map { inner ->
@@ -203,63 +249,70 @@ fun Routing.globalRoute() {
 
                     val template =
                         user.getAllData<ClusterTemplate>().firstOrNull { it.id == templateId } ?: userInputError("Failed to find $templateId")
-                    updateProgress("Retrieving Hosts")
 
-                    val hostTemplates = template.hosts
+                    val clusterName = template.creator.clusterName
+                    if(create<ListClusterOperation>().invoke(ListClusterReq()).data.any { it.clusterName == clusterName }){
+                        updateProgress(3,9,"Skipping Cluster Creation")
+                        delay(4000)
+                    }else {
+                        updateProgress("Retrieving Hosts")
 
-                    val allJobs = mutableSetOf<String>()
-                    val hostToJoin = mutableListOf<String>()
+                        val hostTemplates = template.hosts
 
-                    hostTemplates.forEach { hostLevel ->
-                        updateProgressDescription("Setting up host " + hostLevel.key)
-                        val info = hosts.firstOrNull { it.hostName == hostLevel.key }
-                        if (info != null && info.clusterId == null) {
-                            //disk
-                            val hostId = info.hostId
-                            val diskInfos = create<ListDiskByHostOperation>().invoke(ListDiskByHostReq(hostId)).data
+                        val allJobs = mutableSetOf<String>()
+                        val hostToJoin = mutableListOf<String>()
 
-                            hostLevel.value.disks.forEach { diskLevel ->
-                                val diskInfo = diskInfos.firstOrNull { it.diskSerialNumber == diskLevel.key }
+                        hostTemplates.forEach { hostLevel ->
+                            updateProgressDescription("Setting up host " + hostLevel.key)
+                            val info = hosts.firstOrNull { it.hostName == hostLevel.key }
+                            if (info != null && info.clusterId == null) {
+                                //disk
+                                val hostId = info.hostId
+                                val diskInfos = create<ListDiskByHostOperation>().invoke(ListDiskByHostReq(hostId)).data
 
-                                if (diskInfo != null) {
-                                    val diskId = diskInfo.diskId
-                                    val currTags = diskInfo.diskTagList
+                                hostLevel.value.disks.forEach { diskLevel ->
+                                    val diskInfo = diskInfos.firstOrNull { it.diskSerialNumber == diskLevel.key }
 
-                                    diskLevel.value.tags.forEach { tag ->
-                                        if (tag !in currTags) {
-                                            allJobs.add(
-                                                create<DiskAddTagOperation>().invoke(
-                                                    DiskAddTagReq(
-                                                        hostId, mutableListOf(diskId), tag
-                                                    )
-                                                ).taskId
-                                            )
-                                            delay(1000)
+                                    if (diskInfo != null) {
+                                        val diskId = diskInfo.diskId
+                                        val currTags = diskInfo.diskTagList
+
+                                        diskLevel.value.tags.forEach { tag ->
+                                            if (tag !in currTags) {
+                                                allJobs.add(
+                                                    create<DiskAddTagOperation>().invoke(
+                                                        DiskAddTagReq(
+                                                            hostId, mutableListOf(diskId), tag
+                                                        )
+                                                    ).taskId
+                                                )
+                                                delay(1000)
+                                            }
                                         }
                                     }
                                 }
+                                hostToJoin.add(hostId)
                             }
-                            hostToJoin.add(hostId)
                         }
+
+                        traceAllUntilComplete(this, allJobs)
+
+                        if (hostToJoin.isEmpty()) {
+                            userInputError("No any host are ready to join cluster")
+                        }
+
+                        updateProgress("Setting up Cluster")
+                        val id = create<CreateClusterOperation>().invoke(
+                            CreateClusterReq(
+                                cluster = template.creator,
+                                hosts = hostToJoin
+                            )
+                        ).taskId
+                        traceAllUntilComplete(this, hashSetOf(id))
+
+                        updateProgress("Syncing")
+                        delay(8000)
                     }
-
-                    traceAllUntilComplete(this, allJobs)
-
-                    if (hostToJoin.isEmpty()) {
-                        userInputError("No any host are ready to join cluster")
-                    }
-
-                    updateProgress("Setting up Cluster")
-                    val id = create<CreateClusterOperation>().invoke(
-                        CreateClusterReq(
-                            cluster = template.creator,
-                            hosts = hostToJoin
-                        )
-                    ).taskId
-                    traceAllUntilComplete(this, hashSetOf(id))
-
-                    updateProgress("Syncing")
-                    delay(8000)
 
                     val clusterId = create<ListClusterOperation>().invoke(ListClusterReq()).data.firstOrNull { it.clusterName == template.creator.clusterName }?.clusterId?:userInputError("Failed to find the created cluster")
 
@@ -276,7 +329,7 @@ fun Routing.globalRoute() {
                     updateProgress("Setting up Volumes")
                     val tasks = mutableSetOf<String>()
                     template.volumes.forEach {
-                        tasks.add(create<CreateVolumeOperation>().invoke(CreateVolumeReq(it.volumeName, clusterId, it.volumeSize, it.blockSize, it.type)).taskId)
+                        tasks.add(create<CreateVolumeOperation>().invoke(CreateVolumeReq(it.volumeName, clusterId, it.volumeSize, it.blockSize, it.type,it.compressionAlgorithm,it.enableDedup)).taskId)
                     }
 
                     traceAllUntilComplete(this, tasks)

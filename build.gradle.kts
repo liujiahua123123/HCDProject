@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.6.10"
     kotlin("plugin.serialization") version "1.6.10"
+    application
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "net.mamoe"
@@ -39,6 +41,7 @@ dependencies {
     implementation("org.apache.sshd:sshd-scp:2.8.0")
     implementation("org.apache.sshd:sshd-netty:2.8.0")
 
+    implementation("net.mamoe.yamlkt:yamlkt:0.10.2")
 
     implementation(kotlinx("serialization-core", serializationVersion))
     implementation(kotlinx("serialization-json", serializationVersion))
@@ -51,4 +54,8 @@ tasks.test {
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+application {
+    mainClass.set("Index")
 }

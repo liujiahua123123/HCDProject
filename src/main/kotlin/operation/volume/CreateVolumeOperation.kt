@@ -9,7 +9,13 @@ data class CreateVolumeReq(
     val clusterId: String,
     val volumeSize: Long,
     val blockSize: Long,
-    val type: String
+    val type: String,
+    val compressionAlgorithm: String,
+    val enableDedup: Boolean,
+    /**
+     compressionAlgorithm": "NONE",
+     enableDedup": true,
+     */
 )
 
 @kotlinx.serialization.Serializable

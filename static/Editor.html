@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.40.0/lib/codemirror.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.40.0/theme/material.css">
+    <script src="https://unpkg.com/codemirror@5.40.0/lib/codemirror.js"></script>
+    <script src="https://unpkg.com/codemirror@5.40.0/mode/yaml/yaml.js"></script>
+    <meta charset="UTF-8">
+    <title>Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.30/vue.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"
+          crossorigin="anonymous"/>
+    <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/utils.js"></script>
+    <title>Document</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script>
+        var editor
+        function refresh() {
+            document.dataPost("/get-config", {
+                id: currentId()
+            }, function (s,data) {
+                console.log(data)
+                editor.getDoc().setValue(data)
+            })
+        }
+
+        $(document).ready(function () {
+            let myTextArea = document.getElementById('code');
+            let code = $("#code");
+            editor = CodeMirror.fromTextArea(myTextArea, {
+                lineNumbers: true,
+                mode: 'text/x-yaml',
+                theme: 'material'
+            });
+            editor.setSize("100%", "100%");
+
+            $("#save").click(function () {
+                document.dataPost("/save-config", {
+                    id: currentId(),
+                    content: editor.getDoc().getValue()
+                }, refresh)
+            })
+
+            refresh()
+        })
+
+        function currentId() {
+            let x = window.location.pathname.split("#")[0]
+            let re = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
+            let z = x.split("/").reverse()
+            for (let i = 0; i < z.length; ++i) {
+                if (re.test(z[i])) {
+                    return z[i]
+                }
+            }
+            alert("cant find config ID")
+            return -1
+        }
+    </script>
+</head>
+
+<body style="background: #263238">
+
+<textarea id="code" style="width: 100vw; height: 100vh">
+
+</textarea>
+
+<div class="mdui-fab-wrapper" id="saveFeb">
+    <button class="mdui-fab mdui-ripple mdui-color-red" id="save">
+        <i class="mdui-icon material-icons">save</i>
+    </button>
+</div>
+
+</body>
+
+</html>

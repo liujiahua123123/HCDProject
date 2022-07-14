@@ -1,5 +1,6 @@
 package server.route
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -10,12 +11,13 @@ import operation.httpOperationScope
 import operation.task.TraceTaskOperation
 import operation.task.TraceTaskReq
 import operation.volume.*
-import server.handleDataPost
-import server.ifFromPortalPage
-import server.readDataRequest
-import server.respondTraceable
+import server.*
 import utils.OperationExecutor
 import utils.VolumeInfo
+
+
+@kotlinx.serialization.Serializable
+data class CreateMultiVolumeRequest(val input: CreateVolumeReq, val count: Int)
 
 fun Routing.volumeRoute() {
     handleDataPost("/volume/create"){
@@ -28,6 +30,32 @@ fun Routing.volumeRoute() {
                     updateProgress("Waiting to complete")
                     while (create<TraceTaskOperation>().invoke(TraceTaskReq(task)).progress != 100){
                         delay(500)
+                    }
+                }
+            })
+        }
+    }
+
+    handleDataPost("/volume/create-multi"){
+        ifFromPortalPage { user, portal ->
+            val req = call.readDataRequest<CreateMultiVolumeRequest>()
+
+            if(!req.input.volumeName.contains("{num}")){
+                userInputError("Must have {num} in name field for multi-create")
+            }
+
+            call.respondTraceable(OperationExecutor.addExecutorTask<Unit> {
+                httpOperationScope(portal) {
+                    updateProgress(0,req.count,"Creating volume")
+
+                    repeat(req.count) {
+                        val task = create<CreateVolumeOperation>().invoke(req.input.copy(
+                            volumeName = req.input.volumeName.replace("{num}", "$it")
+                        )).taskId
+                        updateProgress("Creating..")
+                        while (create<TraceTaskOperation>().invoke(TraceTaskReq(task)).progress != 100) {
+                            delay(500)
+                        }
                     }
                 }
             })

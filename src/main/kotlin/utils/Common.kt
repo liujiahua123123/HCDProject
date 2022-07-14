@@ -64,6 +64,7 @@ data class VolumeInfo(
     val compressionAlgorithm: String,
     val iscsiTarget: IscsiTarget,
     val type: String,
+    val enableDedup: Boolean,
 )
 
 @Serializable

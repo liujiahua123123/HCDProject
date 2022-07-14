@@ -2,6 +2,7 @@ import server.Server
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import java.util.*
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
@@ -47,6 +48,10 @@ fun setup(){
 }
 
 suspend fun main(){
+
+
+
     setup()
     Server.start()
+
 }

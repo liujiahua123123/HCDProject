@@ -48,7 +48,7 @@ fun ApplicationCall.bindUser(user: User) {
 
 
 object UserManager {
-    private val file = DATA_FILES.findFile("user.json")
+    private val file = DATA_FILES.findFile("user.yaml")
     private val lock = Mutex()
 
     private val salt = createUuid4()
@@ -152,7 +152,9 @@ data class VolumeTemplate(
     val volumeName: String,
     val volumeSize: Long,
     val blockSize: Long,
-    val type: String
+    val type: String,
+    val enableDedup: Boolean,
+    val compressionAlgorithm: String,
 )
 
 @kotlinx.serialization.Serializable
@@ -168,7 +170,7 @@ object UserDataManagement {
     val folder = DATA_FILES.findSub("userdata")
 
     fun readAll(uid: String): MutableList<UserData> {
-        return folder.findFile("$uid.json").deserializeList<UserData>()
+        return folder.findFile("$uid.yaml").deserializeList<UserData>()
     }
 
     inline fun <reified T : UserData> getAll(uid: String): MutableList<T> {
@@ -181,7 +183,7 @@ object UserDataManagement {
 
     suspend fun save(uid: String, userData: UserData){
         lock.withLock {
-            folder.findFile("$uid.json").writeList(readAll(uid).apply {
+            folder.findFile("$uid.yaml").writeList(readAll(uid).apply {
                 removeIf { it.id == userData.id }
                 add(0, userData)
             })
@@ -190,7 +192,7 @@ object UserDataManagement {
 
     suspend fun delete(uid: String, dataId: String){
         lock.withLock {
-            folder.findFile("$uid.json").writeList(this.readAll(uid).apply{removeIf { it.id == dataId }})
+            folder.findFile("$uid.yaml").writeList(this.readAll(uid).apply{removeIf { it.id == dataId }})
         }
     }
 
@@ -203,7 +205,7 @@ object UserDataManagement {
         if(block(selected)){
             all.addAll(0,selected)
             lock.withLock {
-                folder.findFile("$uid.json").writeList(all)
+                folder.findFile("$uid.yaml").writeList(all)
             }
         }
     }

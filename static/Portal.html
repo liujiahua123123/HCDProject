@@ -351,7 +351,6 @@
             $("#remove_tag_all").click(function () {
                 remove_tag(["DATA_DISK", "METADATA_DISK", "WRITE_CACHE", "READ_CACHE"])
             })
-
             $("#create-cluster").click(function () {
                 document.dataPost("/cluster/new", {
                     cluster: {
@@ -428,13 +427,47 @@
                 let size = parents.find(".create_volume_volume_size").val()
                 let block = parents.find(".create_volume_block_size").val()
                 let type = parents.find(".create_volume_volume_type").val()
+                let compressionAlgorithm = parents.find(".create_volume_compression_alg").val()
+                let enableDedup = parents.find(".create_volume_enable_dedup").prop("checked")
                 document.dataPost("/volume/create", {
                     volumeName: volume,
                     clusterId: cluster,
                     volumeSize: size,
                     blockSize: block,
-                    type: type
+                    type: type,
+                    compressionAlgorithm: compressionAlgorithm,
+                    enableDedup: enableDedup,
                 }, refresh)
+            })
+            $("#volume-management").on('click', '.create-volume-mutli', function () {
+                let parents = $(this).parent().parent()
+                let cluster = parents.find(".create_volume_cluster_id").val()
+                let volume = parents.find(".create_volume_volume_name").val()
+                let size = parents.find(".create_volume_volume_size").val()
+                let block = parents.find(".create_volume_block_size").val()
+                let type = parents.find(".create_volume_volume_type").val()
+                let compressionAlgorithm = parents.find(".create_volume_compression_alg").val()
+                let enableDedup = parents.find(".create_volume_enable_dedup").prop("checked")
+                let input = {
+                    volumeName: volume,
+                    clusterId: cluster,
+                    volumeSize: size,
+                    blockSize: block,
+                    type: type,
+                    compressionAlgorithm: compressionAlgorithm,
+                    enableDedup: enableDedup,
+                }
+                console.log(input)
+
+                mdui.prompt('Create How Many? remember to use {num} in name field for replacement',
+                    function (value) {
+                        document.dataPost("/volume/create-multi", {
+                            count: parseInt(value),
+                            input: input
+                        }, refresh)
+                    }
+                );
+
             })
             $("#delete-volume").click(function () {
                 let list = []
@@ -523,7 +556,7 @@
                     clusterId: clusterId
                 }, refresh)
             })
-            volumeAccessGroupManagement.on('click','.delete-group',function () {
+            volumeAccessGroupManagement.on('click', '.delete-group', function () {
                 let gid = $(this).attr("volumeaccessgroupid")
                 let clusterId = $(this).attr("clusterId")
                 document.dataPost("/volume-access-group/delete", {
@@ -531,11 +564,16 @@
                     clusterId: clusterId
                 }, refresh)
             })
-            $("#select-template-dialog").on('click','.delete-template',function () {
+            let templateSelect = $("#select-template-dialog")
+            templateSelect.on('click', '.delete-template', function () {
                 let tid = $(this).attr("template-id")
                 document.dataPost("/delete-template", {
                     templateId: tid
                 }, refresh)
+            })
+            templateSelect.on('click', '.edit-template', function () {
+                let tid = $(this).attr("template-id")
+                window.open("/edit/" + tid)
             })
         }
 
@@ -664,7 +702,9 @@
     <li class="mdui-list-item">
         <div class="mdui-list-item-content">
             <div class="mdui-list-item-title mdui-list-item-one-line">{{ name }}
-                <i class="mdui-icon material-icons delete-template" style="margin-right: 10px" v-bind:template-id="template_id">delete</i>
+                <i class="mdui-icon material-icons delete-template" style="margin-right: 5px"
+                   v-bind:template-id="template_id">delete</i>
+                <i class="mdui-icon material-icons edit-template" v-bind:template-id="template_id">edit</i>
             </div>
             <div class="mdui-list-item-text mdui-list-item-three-line">
                 <div v-for="content in info.split('\n')">
@@ -685,13 +725,14 @@
         <table class="mdui-table mdui-table-selectable">
             <thead>
             <tr>
-                <th>{{cluster_id}}</th>
+                <th>cluster id({{cluster_id}})</th>
                 <th>volumeName</th>
                 <th class="mdui-table-col-numeric">volumeSize</th>
                 <th class="mdui-table-col-numeric">blockSize</th>
                 <th>status</th>
                 <th>accessLevel</th>
                 <th>compressionAlgorithm</th>
+                <th>dedup</th>
                 <th class="mdui-table-col-numeric">iscsiTarget/iqn</th>
             </tr>
             </thead>
@@ -704,6 +745,7 @@
                 <td>{{volume_data.status}}</td>
                 <td>{{volume_data.accessLevel}}</td>
                 <td>{{volume_data.compressionAlgorithm}}</td>
+                <td>{{volume_data.enableDedup}}</td>
                 <td>{{volume_data.iscsiTarget.iqn}}</td>
             </tr>
             </tbody>
@@ -730,7 +772,12 @@
                                placeholder="Block Size"/>
                     </label>
                 </td>
-                <input type="hidden" class="create_volume_cluster_id" v-bind:value="cluster_id">
+                <td style="width: 200px;!important;padding: 0 0 0 5px;">
+                    <label>
+                        <input class="mdui-textfield-input create_volume_compression_alg" type="test"
+                               placeholder="Compression Algorithm"/>
+                    </label>
+                </td>
                 <td style="width: 200px;!important;padding: 0 0 0 5px;">
                     <label>
                         <select class="mdui-select create_volume_volume_type">
@@ -739,8 +786,17 @@
                         </select>
                     </label>
                 </td>
+                <td style="width: 200px;!important;padding: 0 0 0 5px;">
+                    <label class="mdui-checkbox">
+                        <input type="checkbox" class="create_volume_enable_dedup"/>
+                        <i class="mdui-checkbox-icon"></i>
+                        Enable Dedup
+                    </label>
+                </td>
+                <input type="hidden" class="create_volume_cluster_id" v-bind:value="cluster_id">
                 <td style="float: right">
                     <button class="mdui-btn mdui-color-theme-accent create-volume">CREATE NEW</button>
+                    <button style="margin-left: 10px" class="mdui-btn mdui-color-theme-accent create-volume-mutli">CREATE MULTI</button>
                 </td>
             </tr>
             </tbody>
@@ -796,7 +852,8 @@
         <div class="mdui-card-media">
 
             <div class="mdui-card-menu">
-                <button class="mdui-btn mdui-btn-icon mdui-text-color-white delete-group" v-bind:clusterId="data.clusterId"
+                <button class="mdui-btn mdui-btn-icon mdui-text-color-white delete-group"
+                        v-bind:clusterId="data.clusterId"
                         v-bind:volumeAccessGroupId="data.volumeAccessGroupId">
                     <i class="mdui-icon material-icons">delete</i>
                 </button>

@@ -3,9 +3,10 @@ package utils
 import kotlinx.serialization.*
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
-import operation.disk.DiskRemoveTagReq
+import net.mamoe.yamlkt.Yaml
 import java.io.File
 import java.security.MessageDigest
+import kotlin.concurrent.timerTask
 import kotlin.reflect.full.memberProperties
 
 
@@ -164,13 +165,11 @@ fun String.md5(): String {
 }
 
 
-val FileJson = Json {
-    this.ignoreUnknownKeys = true
-    this.isLenient = true
-    this.encodeDefaults = true
+val FileSerializer = Yaml {
+    this.nonStrictNumber = true
+    this.encodeDefaultValues = true
 }
-
-inline fun <reified T : Any> String.deserialize(): T = FileJson.decodeFromString(this)
+inline fun <reified T : Any> String.deserialize(): T = FileSerializer.decodeFromString(this)
 
 
 inline fun <reified T : Any> T.serialize(format: StringFormat, serializer: KSerializer<T> = format.serializersModule.serializer()): String {
@@ -178,11 +177,11 @@ inline fun <reified T : Any> T.serialize(format: StringFormat, serializer: KSeri
 }
 
 inline fun <reified T:Any> File.writeList(list: List<T>){
-    this.writeText(list.serialize(FileJson))
+    this.writeText(list.serialize(FileSerializer))
 }
 
 inline fun <reified T:Any> File.writeData(data: T){
-    this.writeText(data.serialize(FileJson))
+    this.writeText(data.serialize(FileSerializer))
 }
 
 inline fun <reified T:Any> File.deserializeList():MutableList<T>{
@@ -194,7 +193,7 @@ inline fun <reified T : Any> File.deserialize(defaultCreator:() -> T): T{
     if(text.isEmpty()){
         return defaultCreator()
     }
-    return FileJson.decodeFromString(text)
+    return FileSerializer.decodeFromString(text)
 }
 
 fun String.akamaiHash():String = "" + this.map { it.toInt() }.filter { it in 49..127 }.sum()
