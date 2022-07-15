@@ -79,7 +79,6 @@ fun Routing.globalRoute() {
     }
 
 
-
     handleDataPost("/purge-db") {
         ifFromPortalPage { user, portal ->
             call.respondTraceable(OperationExecutor.addExecutorTask<Unit> {

@@ -118,7 +118,6 @@ data class ConnectionHistory(
     val password: String
 ): UserData()
 
-
 @kotlinx.serialization.Serializable
 data class ClusterTemplate(
     val templateName: String,
